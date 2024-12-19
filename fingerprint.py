@@ -16,7 +16,7 @@ import glob
 import os
 import args
 from dejavu import Dejavu
-from dejavu.logic.recognizer.file_recognizer import FileRecognizer
+from dejavu.recognize import FileRecognizer
 
 # Load config file
 config = json.load(open("config.json"))
@@ -82,9 +82,18 @@ def fingerprint_episodes(anidb_id, episodes):
 			series.append({
 				"source": "open_anime_timestamps",
 				"episode_number": episode["episode_number"],
-				"recap_start": -1,
-				"opening_start": opening_start,
-				"ending_start": ending_start,
+				"recap": {
+					"start": -1,
+					"end": -1
+				},
+				"opening": {
+					"start": opening_start,
+					"end": opening_end
+				},
+				"ending": {
+					"start": ending_start,
+					"end": ending_end
+				},
 				"preview_start": -1
 			})
 	

@@ -3,6 +3,7 @@
 
 import args
 import requests
+import urllib.parse
 from tqdm import tqdm
 
 def download_themes(mal_id):
@@ -59,14 +60,14 @@ def download_themes(mal_id):
 	return themes_list
 
 
-def get_themes(mal_id):
-	response = requests.post("https://themes.moe/api/themes/search", json=[mal_id])
+def get_themes(name):
+	response = requests.post(f"https://api.animethemes.moe/search?fields%5Bsearch%5D=animethemes&include%5Banimetheme%5D=animethemeentries.videos.audio&q={urllib.parse.quote(name, safe='')}")
 	
 	if len(response.json()) == 0:
 		return []
 
-	data = themes = response.json()[0]
-	themes = data["themes"]
+	data = response.json()["search"]
+	themes = data["animethemes"]
 	
 	if args.parsed_args.verbose:
 		print(f"[themesmoe.py] [INFO] Found {len(themes)} themes for {data['name']}")

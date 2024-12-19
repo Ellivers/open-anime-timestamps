@@ -1,6 +1,5 @@
 import os
 import json
-import xmltodict
 from pathlib import Path
 from pydub import AudioSegment
 import args
@@ -9,7 +8,7 @@ import anime_skip
 import anidb
 import anime_offline_database
 import kitsu
-import themesmoe
+import animethemesmoe
 #import animixplay
 import twistmoe
 import fingerprint
@@ -34,17 +33,17 @@ def main():
 	# Update anime ID db
 	anime_offline_database.update_id_database()
 
-	anime_titles_xml = open("anime-titles.xml")
-	anime_titles = xmltodict.parse(anime_titles_xml.read())["animetitles"]["anime"]
+	anime_titles_json = open("anime-titles.json", 'rb')
+	anime_titles = json.load(anime_titles_json)
 
 	# Pull timestamps from other databases first
 	if not args.parsed_args.skip_aggregation:
 		start_index = 0
 		if args.parsed_args.aggregation_start != None:
-			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["@aid"]) == args.parsed_args.aggregation_start), 0)
+			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.aggregation_start), 0)
 		
 		for anime in anime_titles[start_index:]:
-			anidb_id = anime["@aid"]
+			anidb_id = anime["id"]
 			kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 			
 			if not kitsu_id:
@@ -70,38 +69,72 @@ def main():
 					
 					timestamp_data = {
 						"episode_number": episode["attributes"]["number"],
-						"recap_start": -1,
-						"opening_start": -1,
-						"ending_start": -1,
+						"recap": {
+							"start": -1,
+							"end": -1
+						},
+						"opening": {
+							"start": -1,
+							"end": -1
+						},
+						"ending": {
+							"start": -1,
+							"end": -1
+						},
 						"preview_start": -1
 					}
 
 					if anime_skip_episode_timestamps:
 						# anime-skip has a lot of timestamp types, most of which don't make sense to me
 						# only taking a subset of them
+						# "Canon" type means resuming from something else, like at the end of an opening
 						timestamp_data["source"] = "anime_skip"
 
-						for timestamp in anime_skip_episode_timestamps:
-							if timestamp["type"]["name"] == "Recap":
-								timestamp_data["recap_start"] = int(timestamp["at"])
-							
-							if timestamp["type"]["name"] == "New Intro":
-								timestamp_data["opening_start"] = int(timestamp["at"])
+						current_type = "Canon"
+						for i in range(len(anime_skip_episode_timestamps)):
+							timestamp = anime_skip_episode_timestamps[i]
 
-							if timestamp["type"]["name"] == "New Credits":
-								timestamp_data["ending_start"] = int(timestamp["at"])
+							if current_type == "Canon":
+								if timestamp["type"]["name"] == "Recap":
+									timestamp_data["recap"]["start"] = int(timestamp["at"])
+									current_type = "Recap"
+								
+								if timestamp["type"]["name"] in ["New Intro","Intro"]:
+									timestamp_data["opening"]["start"] = int(timestamp["at"])
+									current_type = "Intro"
 
-							if timestamp["type"]["name"] == "Preview":
-								timestamp_data["preview_start"] = int(timestamp["at"])
+								if timestamp["type"]["name"] == ["New Credits","Credits"]:
+									timestamp_data["ending"]["start"] = int(timestamp["at"])
+									current_type = "Credits"
+
+								if timestamp["type"]["name"] == "Preview":
+									timestamp_data["preview_start"] = int(timestamp["at"])
+									break # assuming that previews are only right at the end
+
+							elif timestamp["type"]["name"] == "Canon":
+								if current_type == "Recap":
+									timestamp_data["recap"]["end"] = int(timestamp["at"])
+								if current_type == "Intro":
+									timestamp_data["opening"]["end"] = int(timestamp["at"])
+								if current_type == "Credits":
+									timestamp_data["ending"]["end"] = int(timestamp["at"])
+
+								current_type = "Canon"
 
 					elif bettervrv_episode_timestamps:
 						timestamp_data["source"] = "bettervrv"
 
 						if "introStart" in bettervrv_episode_timestamps:
-							timestamp_data["opening_start"] = int(bettervrv_episode_timestamps["introStart"])
+							timestamp_data["opening"]["start"] = int(bettervrv_episode_timestamps["introStart"])
+
+							if "introEnd" in bettervrv_episode_timestamps:
+								timestamp_data["opening"]["end"] = int(bettervrv_episode_timestamps["introEnd"])
 
 						if "outroStart" in bettervrv_episode_timestamps:
-							timestamp_data["ending_start"] = int(bettervrv_episode_timestamps["outroStart"])
+							timestamp_data["ending"]["start"] = int(bettervrv_episode_timestamps["outroStart"])
+							
+							if "outroEnd" in bettervrv_episode_timestamps:
+								timestamp_data["ending"]["end"] = int(bettervrv_episode_timestamps["outroEnd"])
 
 						if "previewStart" in bettervrv_episode_timestamps:
 							timestamp_data["preview_start"] = int(bettervrv_episode_timestamps["previewStart"])
@@ -121,10 +154,10 @@ def main():
 	# Scrape other timestamps
 	start_index = 0
 	if args.parsed_args.scrape_start != None:
-		start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["@aid"]) == args.parsed_args.scrape_start), 0)
+		start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.scrape_start), 0)
 
 	for anime in anime_titles[start_index:]:
-		anidb_id = anime["@aid"]
+		anidb_id = anime["id"]
 		mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
 		kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 
@@ -134,7 +167,7 @@ def main():
 			continue
 
 		kitsu_details = kitsu.details(kitsu_id)
-		themes = themesmoe.download_themes(mal_id)
+		themes = animethemesmoe.download_themes(mal_id)
 
 		if len(themes) == 0:
 			if args.parsed_args.verbose:
@@ -177,12 +210,12 @@ def main():
 		title = None
 
 		for option in titles:
-			if option["@xml:lang"] == "x-jat" and option["@type"] != "short":
-				title = option["#text"]
+			if option["lang"] == "x-jat" and option["type"] != "short":
+				title = option["title"]
 				break
 
-			if option["@xml:lang"] == "en" and option["@type"] != "short":
-				title = option["#text"]
+			if option["lang"] == "en" and option["type"] != "short":
+				title = option["title"]
 				break
 		
 		episodes = animixplay.get_episodes(title)

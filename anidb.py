@@ -1,38 +1,29 @@
 # Download the anime title list
 
 import requests
-import gzip
-import os
-import os.path
-import time
 import args
 
-ANIME_XML_URL = "http://anidb.net/api/anime-titles.xml.gz"
-ANIME_XML_PATH = "./anime-titles.xml"
+ANIME_DATA_URL = "https://raw.githubusercontent.com/c032/anidb-animetitles-archive/refs/heads/main/data/animetitles.json"
+ANIME_DATA_PATH = "./anime-titles.json"
+
+def can_download_titles():
+		return True
 
 def update_title_cache():
 	if can_download_titles():
 		if args.parsed_args.verbose:
-			print("[anidb.py] [INFO] Updating cached anime-titles.xml")
+			print("[anidb.py] [INFO] Updating cached anime-titles.json")
 
-		# 403's without a UA
-		headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4521.0 Safari/537.36 Edg/93.0.910.5"}
-		response = requests.get(ANIME_XML_URL, headers=headers)
+		response = requests.get(ANIME_DATA_URL)
+		if response.status_code != 200:
+			if args.parsed_args.verbose:
+				print("[anidb.py] [INFO] Failed to get file. Using cached anime-titles.json")
+				return
 		
-		# requests does not ungz this response? Do it manually
-		xml = gzip.decompress(response.content)
-		
-		xml_file = open(ANIME_XML_PATH, "w")
-		xml_file.write(xml.decode())
-		xml_file.close()
+		converted_json = "[" + ",\n".join(response.text.splitlines()) + "]"
+		json_file = open(ANIME_DATA_PATH, "wb")
+		json_file.write(converted_json.encode('utf-8'))
+		json_file.close()
 	else:
 		if args.parsed_args.verbose:
-			print("[anidb.py] [INFO] Using cached anime-titles.xml")
-
-def can_download_titles():
-	if os.path.isfile(ANIME_XML_PATH) and os.access(ANIME_XML_PATH, os.R_OK):
-		# AniDB only allows this file to be downloaded once per day
-		update_time = os.path.getmtime(ANIME_XML_PATH)
-		return ((time.time() - update_time) / 3600 > 24)
-	else:
-		return True
+			print("[anidb.py] [INFO] Using cached anime-titles.json")
