@@ -2,6 +2,8 @@ pycryptodome>=3.9.9
 pydub==0.23.1
 python-graphql-client==0.4.3
 requests==2.22.0
-xmltodict==0.12.0
+lxml==5.3.0
+cssselect==1.2.0
 tqdm==4.61.1
+ffmpeg-python==0.2.0
 https://github.com/JPery/dejavu/zipball/master

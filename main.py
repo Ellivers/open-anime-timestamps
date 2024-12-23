@@ -167,22 +167,13 @@ def main():
 			continue
 
 		kitsu_details = kitsu.details(kitsu_id)
-		themes = animethemesmoe.download_themes(mal_id)
+		themes = animethemesmoe.download_themes(kitsu_details["data"]["attributes"]["canonicalTitle"])
 
 		if len(themes) == 0:
 			if args.parsed_args.verbose:
 				title = kitsu_details["data"]["attributes"]["canonicalTitle"]
 				print(f"[main.py] [WARNING] {title} has no themes! Skipping")
 			continue
-		
-		for theme_path in themes:
-			mp3_path = Path(theme_path).with_suffix(".mp3")
-
-			if args.parsed_args.verbose:
-				print(f"[main.py] [INFO] Converting {theme_path} to {mp3_path}")
-
-			AudioSegment.from_file(theme_path).export(mp3_path, format="mp3")
-			os.remove(theme_path)
 
 		episodes = twistmoe.download_episodes(kitsu_details["data"]["attributes"]["slug"])
 

@@ -15,6 +15,7 @@ import json
 import glob
 import os
 import args
+import ffmpeg
 from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer
 
@@ -33,12 +34,12 @@ def fingerprint_episodes(anidb_id, episodes):
 	if args.parsed_args.verbose:
 		print("[fingerprint.py] [INFO] Adding openings to fingerprint database")
 
-	openings_dejavu.fingerprint_directory("openings", [".mp3"])
+	openings_dejavu.fingerprint_directory("openings", [".ogg"])
 
 	if args.parsed_args.verbose:
 		print("[fingerprint.py] [INFO] Adding endings to fingerprint database")
 
-	endings_dejavu.fingerprint_directory("endings", [".mp3"])
+	endings_dejavu.fingerprint_directory("endings", [".ogg"])
 
 	# Clear the ending/opening folders after done
 	if args.parsed_args.verbose:
@@ -67,12 +68,14 @@ def fingerprint_episodes(anidb_id, episodes):
 			
 			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
 			opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
+			opening_end = opening_start + int(float(ffmpeg.probe(f'openings/{opening_results["results"][0]["song_name"]}.ogg')["format"][""]))
 			
 			if args.parsed_args.verbose:
 				print("[fingerprint.py] [INFO] Checking episode audio for ending")
 			
 			ending_results = endings_recognizer.recognize_file(episode["mp3_path"])
 			ending_start = int(abs(ending_results["results"][0]["offset_seconds"])) # convert to positive and round down
+			ending_end = ending_start + int(float(ffmpeg.probe(f'endings/{ending_results["results"][0]["song_name"]}.ogg')["format"][""]))
 
 			os.remove(episode["mp3_path"])
 
