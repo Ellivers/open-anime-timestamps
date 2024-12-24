@@ -72,67 +72,15 @@ def main():
 						continue
 				
 				try:
-					episode_number = int(episode["number"])
+					episode_number = float(episode["number"])
 				except Exception:
 					logprint(f"[main.py] [WARNING] Got invalid episode number {episode['number']}")
 					continue
 				
-				if not any(e['episode_number'] == episode["number"] for e in series):
+				if not any(e['episode_number'] == episode_number for e in series):
 					#bettervrv_episode_timestamps = bettervrv.find_episode_by_name(episode["attributes"]["canonicalTitle"])
 					
-					timestamp_data = {
-						"episode_number": episode_number,
-						"recap": {
-							"start": -1,
-							"end": -1
-						},
-						"opening": {
-							"start": -1,
-							"end": -1
-						},
-						"ending": {
-							"start": -1,
-							"end": -1
-						},
-						"preview_start": -1
-					}
-
-					# anime-skip has a lot of timestamp types, most of which don't make sense to me
-					# only taking a subset of them
-					# "Canon" type means resuming from something else, like at the end of an opening
-					timestamp_data["source"] = "anime_skip"
-
-					current_type = "Unknown"
-					for i in range(len(episode["timestamps"])):
-						timestamp = episode["timestamps"][i]
-						timestamp_data["source"] = str(timestamp["source"]).lower()
-
-						if current_type in ["Canon","Unknown"]:
-							if timestamp["type"]["name"] == "Recap":
-								timestamp_data["recap"]["start"] = int(timestamp["at"])
-								current_type = "Recap"
-							
-							if timestamp["type"]["name"] in ["New Intro","Intro"]:
-								timestamp_data["opening"]["start"] = int(timestamp["at"])
-								current_type = "Intro"
-
-							if timestamp["type"]["name"] == ["New Credits","Credits"]:
-								timestamp_data["ending"]["start"] = int(timestamp["at"])
-								current_type = "Credits"
-
-							if timestamp["type"]["name"] == "Preview":
-								timestamp_data["preview_start"] = int(timestamp["at"])
-								break # assuming that previews are only right at the end
-
-						elif timestamp["type"]["name"] in ["Canon","Unknown"]:
-							if current_type == "Recap":
-								timestamp_data["recap"]["end"] = int(timestamp["at"])
-							if current_type == "Intro":
-								timestamp_data["opening"]["end"] = int(timestamp["at"])
-							if current_type == "Credits":
-								timestamp_data["ending"]["end"] = int(timestamp["at"])
-
-							current_type = timestamp["type"]["name"]
+					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"])
 
 					"""
 					elif bettervrv_episode_timestamps:
