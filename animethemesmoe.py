@@ -9,6 +9,8 @@ import re
 from tqdm import tqdm
 from difflib import SequenceMatcher
 
+from log import logprint
+
 def download_themes(name: str):
 	themes = get_themes(name)
 	themes_list = []
@@ -28,23 +30,24 @@ def download_themes(name: str):
 		audio_path = f"{theme_folder}/{file_name}"
 		
 		similar_enough = SequenceMatcher(None, re.sub('\-(ED|OP)\d?\.\w+$','', file_name), name.replace(' ','')).ratio() > 0.75
+
+		if not similar_enough:
+			continue
+
 		if os.path.exists(audio_path):
-			print(f"[themes.moe] [INFO] {file_name} has already been downloaded. Skipping")
-			if similar_enough:
-				themes_list.append(audio_path)
+			print(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
+			themes_list.append(audio_path)
 			continue
 
 		headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4521.0 Safari/537.36 Edg/93.0.910.5"}
 		response = requests.get(theme_url, allow_redirects=True, headers=headers, stream=True)
 
 		if "audio" not in response.headers["Content-Type"]:
-			if args.parsed_args.verbose:
-				print(f"[themes.moe] [WARNING] Theme {file_name} has no audio content-type! Skipping")
+			logprint(f"[animethemesmoe.py] [WARNING] Theme {file_name} has no audio content-type! Skipping")
 			continue
 
 		if response.status_code != 200:
-			if args.parsed_args.verbose:
-				print(f"[themesmoe.py] [WARNING] Theme {file_name} not reachable! (status code {response.status_code})")
+			logprint(f"[animethemesmoe.py] [WARNING] Theme {file_name} not reachable! (status code {response.status_code})")
 			continue
 		
 		audio_file = open(audio_path, "wb")
@@ -52,7 +55,7 @@ def download_themes(name: str):
 		if args.parsed_args.verbose:
 			content_length = int(response.headers["content-length"] or 0)
 			progress_bar = tqdm(total=content_length, unit='iB', unit_scale=True)
-			progress_bar.set_description(f"[themesmoe.py] [INFO] Downloading {file_name}")
+			progress_bar.set_description(f"[animethemesmoe.py] [INFO] Downloading {file_name}")
 		
 
 		for chunk in response.iter_content(chunk_size=1024*1024):
@@ -83,7 +86,6 @@ def get_themes(name):
 	data = response.json()["search"]
 	themes = data["animethemes"]
 	
-	if args.parsed_args.verbose:
-		print(f"[themesmoe.py] [INFO] Found {len(themes)} themes for {name}")
+	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for {name}")
 	
 	return themes

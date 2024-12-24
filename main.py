@@ -3,19 +3,23 @@ import json
 from pathlib import Path
 from pydub import AudioSegment
 import args
-import bettervrv
+import re
 import anime_skip
 import anidb
 import anime_offline_database
 import kitsu
 import animethemesmoe
 #import animixplay
-import twistmoe
+#import twistmoe
+import animepahe
 import fingerprint
+from log import logprint
 
 Path("./openings").mkdir(exist_ok=True)
 Path("./endings").mkdir(exist_ok=True)
 Path("./episodes").mkdir(exist_ok=True)
+
+MULTIPLE_EPISODE_REGEX = re.compile(r'^(\d+)\-(\d+)$')
 
 def main():
 	# Create JSON database if not exists
@@ -33,7 +37,7 @@ def main():
 	# Update anime ID db
 	anime_offline_database.update_id_database()
 
-	anime_titles_json = open("anime-titles.json", 'rb')
+	anime_titles_json = open("anime-titles.json", 'rb+')
 	anime_titles = json.load(anime_titles_json)
 
 	# Pull timestamps from other databases first
@@ -42,33 +46,42 @@ def main():
 		if args.parsed_args.aggregation_start != None:
 			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.aggregation_start), 0)
 		
+		logprint(f"[main.py] [INFO] Finding timestamps using anime-skip")
+
 		for anime in anime_titles[start_index:]:
-			anidb_id = anime["id"]
-			kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
+			anidb_id = str(anime["id"])
+			anilist_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "anilist")
 			
-			if not kitsu_id:
+			if not anilist_id:
 				continue
 
-			episodes = kitsu.episodes(kitsu_id)
+			episodes = anime_skip.find_episodes_by_external_id(str(anilist_id))
 
 			if anidb_id not in local_database:
 				local_database[anidb_id] = []
 
 			series = local_database[anidb_id]
 
-			if len(series) == len(episodes):
+			if episodes is None or len(series) == len(episodes):
 				continue
+
+			logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
 			
 			for episode in episodes:
-				if not episode["attributes"]["canonicalTitle"]:
+				if episode["number"] is None:
+						continue
+				
+				try:
+					episode_number = int(episode["number"])
+				except Exception:
+					logprint(f"[main.py] [WARNING] Got invalid episode number {episode['number']}")
 					continue
-
-				if not any(e['episode_number'] == episode["attributes"]["number"] for e in series):
-					anime_skip_episode_timestamps = anime_skip.find_episode_by_name(episode["attributes"]["canonicalTitle"])
-					bettervrv_episode_timestamps = bettervrv.find_episode_by_name(episode["attributes"]["canonicalTitle"])
+				
+				if not any(e['episode_number'] == episode["number"] for e in series):
+					#bettervrv_episode_timestamps = bettervrv.find_episode_by_name(episode["attributes"]["canonicalTitle"])
 					
 					timestamp_data = {
-						"episode_number": episode["attributes"]["number"],
+						"episode_number": episode_number,
 						"recap": {
 							"start": -1,
 							"end": -1
@@ -84,43 +97,44 @@ def main():
 						"preview_start": -1
 					}
 
-					if anime_skip_episode_timestamps:
-						# anime-skip has a lot of timestamp types, most of which don't make sense to me
-						# only taking a subset of them
-						# "Canon" type means resuming from something else, like at the end of an opening
-						timestamp_data["source"] = "anime_skip"
+					# anime-skip has a lot of timestamp types, most of which don't make sense to me
+					# only taking a subset of them
+					# "Canon" type means resuming from something else, like at the end of an opening
+					timestamp_data["source"] = "anime_skip"
 
-						current_type = "Canon"
-						for i in range(len(anime_skip_episode_timestamps)):
-							timestamp = anime_skip_episode_timestamps[i]
+					current_type = "Unknown"
+					for i in range(len(episode["timestamps"])):
+						timestamp = episode["timestamps"][i]
+						timestamp_data["source"] = str(timestamp["source"]).lower()
 
-							if current_type == "Canon":
-								if timestamp["type"]["name"] == "Recap":
-									timestamp_data["recap"]["start"] = int(timestamp["at"])
-									current_type = "Recap"
-								
-								if timestamp["type"]["name"] in ["New Intro","Intro"]:
-									timestamp_data["opening"]["start"] = int(timestamp["at"])
-									current_type = "Intro"
+						if current_type in ["Canon","Unknown"]:
+							if timestamp["type"]["name"] == "Recap":
+								timestamp_data["recap"]["start"] = int(timestamp["at"])
+								current_type = "Recap"
+							
+							if timestamp["type"]["name"] in ["New Intro","Intro"]:
+								timestamp_data["opening"]["start"] = int(timestamp["at"])
+								current_type = "Intro"
 
-								if timestamp["type"]["name"] == ["New Credits","Credits"]:
-									timestamp_data["ending"]["start"] = int(timestamp["at"])
-									current_type = "Credits"
+							if timestamp["type"]["name"] == ["New Credits","Credits"]:
+								timestamp_data["ending"]["start"] = int(timestamp["at"])
+								current_type = "Credits"
 
-								if timestamp["type"]["name"] == "Preview":
-									timestamp_data["preview_start"] = int(timestamp["at"])
-									break # assuming that previews are only right at the end
+							if timestamp["type"]["name"] == "Preview":
+								timestamp_data["preview_start"] = int(timestamp["at"])
+								break # assuming that previews are only right at the end
 
-							elif timestamp["type"]["name"] == "Canon":
-								if current_type == "Recap":
-									timestamp_data["recap"]["end"] = int(timestamp["at"])
-								if current_type == "Intro":
-									timestamp_data["opening"]["end"] = int(timestamp["at"])
-								if current_type == "Credits":
-									timestamp_data["ending"]["end"] = int(timestamp["at"])
+						elif timestamp["type"]["name"] in ["Canon","Unknown"]:
+							if current_type == "Recap":
+								timestamp_data["recap"]["end"] = int(timestamp["at"])
+							if current_type == "Intro":
+								timestamp_data["opening"]["end"] = int(timestamp["at"])
+							if current_type == "Credits":
+								timestamp_data["ending"]["end"] = int(timestamp["at"])
 
-								current_type = "Canon"
+							current_type = timestamp["type"]["name"]
 
+					"""
 					elif bettervrv_episode_timestamps:
 						timestamp_data["source"] = "bettervrv"
 
@@ -140,14 +154,22 @@ def main():
 							timestamp_data["preview_start"] = int(bettervrv_episode_timestamps["previewStart"])
 
 						# BetterVRV also has a "postSceneEnd" timestamp, not sure what it does though. Not tracked
+					"""
 
-					if timestamp_data["recap_start"] == -1 and timestamp_data["opening_start"] == -1 and timestamp_data["ending_start"] == -1 and timestamp_data["preview_start"] == -1:
+					if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1 and timestamp_data["preview_start"] == -1:
 						continue
 
-					series.append(timestamp_data)
+					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == timestamp_data["episode_number"]]
+					if len(existing_indices) > 0:
+						if len(existing_indices) > 1:
+							logprint(f"[main.py] [WARNING] Anime with ID {anidb_id} has duplicates of episode {timestamp_data['episode_number']}")
+						series[existing_indices[0]] = timestamp_data
+					else:
+						series.append(timestamp_data)
 
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)
+			local_database_file.truncate()
 
 	local_database_file.close()
 
@@ -158,24 +180,33 @@ def main():
 
 	for anime in anime_titles[start_index:]:
 		anidb_id = anime["id"]
-		mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
 		kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 
 		if not kitsu_id:
-			if args.parsed_args.verbose:
-				print(f"[main.py] [WARNING] {anidb_id} AniDB ID has no Kitsu ID! Skipping")
+			logprint(f"[main.py] [WARNING] {anidb_id} AniDB ID has no Kitsu ID! Skipping")
 			continue
 
 		kitsu_details = kitsu.details(kitsu_id)
-		themes = animethemesmoe.download_themes(kitsu_details["data"]["attributes"]["canonicalTitle"])
+
+		jp_title = None
+		titles = anime["titles"]
+		title_indices = [i for i in range(len(titles)) if titles[i]["type"] == "main"]
+		if len(title_indices) > 0:
+			jp_title = titles[title_indices[0]]["title"]
+		else:
+			jp_title = titles[0]
+
+		themes = animethemesmoe.download_themes(jp_title)
+
+		# animethemes and animepahe use two different main title formats
+		kitsu_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
 
 		if len(themes) == 0:
-			if args.parsed_args.verbose:
-				title = kitsu_details["data"]["attributes"]["canonicalTitle"]
-				print(f"[main.py] [WARNING] {title} has no themes! Skipping")
+			logprint(f"[main.py] [WARNING] {kitsu_title} has no themes! Skipping")
 			continue
 
-		episodes = twistmoe.download_episodes(kitsu_details["data"]["attributes"]["slug"])
+		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
+		episodes = animepahe.download_episodes(pahe_session)
 
 		for episode in episodes:
 			video_path = episode["video_path"]
@@ -183,18 +214,16 @@ def main():
 
 			episode["mp3_path"] = mp3_path
 
-			if args.parsed_args.verbose:
-				print(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
+			logprint(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
 
 			AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
 			os.remove(video_path)
 
-		if args.parsed_args.verbose:
-			print("[main.py] [INFO] Starting fingerprinting")
+		logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
 
 		print(episodes)
 
-		fingerprint.fingerprint_episodes(anidb_id, episodes)
+		fingerprint.fingerprint_episodes(str(anidb_id), episodes)
 
 		'''
 		titles = anime["title"]

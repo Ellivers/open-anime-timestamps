@@ -4,7 +4,7 @@ import json
 import time
 import urllib.parse
 import requests
-import args
+from log import logprint
 
 PARSE_SERVER = "https://parseapi.back4app.com"
 APP_ID = "CfnxYFbrcy0Eh517CcjOAlrAOH9hfe7dpOqfMcJj"
@@ -25,8 +25,7 @@ def find_episode_by_name(name):
 		})
 	except Exception:
 		# If killed, just wait a second
-		if args.parsed_args.verbose:
-			print(f"[bettervrv.py] [WARNING] Error while requesting {name}. Trying again in one second")
+		logprint(f"[bettervrv.py] [WARNING] Error while requesting {name}. Trying again in one second")
 
 		time.sleep(1)
 		return find_episode_by_name(name)

@@ -2,18 +2,14 @@
 
 import requests
 import json
-import os
-import os.path
-import time
-import args
+from log import logprint
 
 URL = "https://raw.githubusercontent.com/manami-project/anime-offline-database/master/anime-offline-database.json"
 PATH = "./anime-offline-database-processed.json"
 
 def update_id_database():
 	if can_download_database():
-		if args.parsed_args.verbose:
-			print("[anime_offline_database.py] [INFO] Updating cached anime-offline-database-processed.json")
+		logprint("[anime_offline_database.py] [INFO] Updating cached anime-offline-database-processed.json")
 
 		response = requests.get(URL)
 		data = response.json()["data"]
@@ -21,8 +17,7 @@ def update_id_database():
 		id_database = []
 
 
-		if args.parsed_args.verbose:
-			print("[anime_offline_database.py] [INFO] Creating anime ID relations")
+		logprint("[anime_offline_database.py] [INFO] Creating anime ID relations")
 
 		for anime in data:
 			relation = {
@@ -44,37 +39,29 @@ def update_id_database():
 				if "myanimelist.net" in source:
 					relation["myanimelist"] = int(anime_id)
 
-				if "kitsu.io" in source:
+				if "kitsu.app" in source:
 					relation["kitsu"] = int(anime_id)
 
 			if all(value == None for value in relation.values()):
 
-				if args.parsed_args.verbose:
-					print(f"[anime_offline_database.py] [WARNING] No relations found for {anime['title']}")
+				logprint(f"[anime_offline_database.py] [WARNING] No relations found for {anime['title']}")
 				continue
 
 			id_database.append(relation)
 
-		if args.parsed_args.verbose:
-			print("[anime_offline_database.py] [INFO] Saving processed relations")
+		logprint("[anime_offline_database.py] [INFO] Saving processed relations")
 		
 		local_database_file = open(PATH, "w")
 		local_database_file.seek(0)
 		json.dump(id_database, local_database_file, indent=4)
 		local_database_file.close()
 	else:
-		if args.parsed_args.verbose:
-			print("[anime_offline_database.py] [INFO] Using cached anime-offline-database-processed.json")
+		logprint("[anime_offline_database.py] [INFO] Using cached anime-offline-database-processed.json")
 
 def can_download_database():
-	if os.path.isfile(PATH) and os.access(PATH, os.R_OK):
-		# AniDB only allows this file to be downloaded once per day
-		update_time = os.path.getmtime(PATH)
-		return ((time.time() - update_time) / 3600 > 24)
-	else:
 		return True
 
-def convert_anime_id(anime_id, id_from, id_to):
+def convert_anime_id(anime_id: str|int, id_from: str, id_to: str):
 	local_database_file = open(PATH, "r")
 	local_database = json.load(local_database_file)
 
