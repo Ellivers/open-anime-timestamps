@@ -110,6 +110,9 @@ def fingerprint_episodes(anidb_id, episodes):
 			logprint("[fingerprint.py] [INFO] Checking episode audio for opening")
 			
 			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
+			if len(opening_results["results"]) == 0:
+				logprint("[fingerprint.py] [INFO] Checking episode audio for opening")
+				continue
 			opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
 			opening_end = opening_start + int(float(ffmpeg.probe(f'openings/{opening_results["results"][0]["song_name"]}.ogg')["format"][""]))
 

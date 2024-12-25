@@ -11,7 +11,7 @@ from difflib import SequenceMatcher
 
 from log import logprint
 
-def download_themes(name: str):
+def download_themes(name: str, to_download: list[str]):
 	themes = get_themes(name)
 	themes_list = []
 
@@ -23,9 +23,15 @@ def download_themes(name: str):
 		theme_folder = None
 
 		if "OP" in theme_type:
+			if "op" not in to_download:
+				continue
 			theme_folder = "./openings"
 		elif "ED" in theme_type:
+			if "ed" not in to_download:
+				continue
 			theme_folder = "./endings"
+		else:
+			continue
 
 		audio_path = f"{theme_folder}/{file_name}"
 		

@@ -70,6 +70,8 @@ def main():
 			for episode in episodes:
 				if episode["number"] is None:
 						continue
+				if len(episode['timestamps']) == 0:
+						continue
 				
 				try:
 					episode_number = float(episode["number"])
@@ -80,7 +82,7 @@ def main():
 				if not any(e['episode_number'] == episode_number for e in series):
 					#bettervrv_episode_timestamps = bettervrv.find_episode_by_name(episode["attributes"]["canonicalTitle"])
 					
-					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"])
+					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"], episode_number)
 
 					"""
 					elif bettervrv_episode_timestamps:
@@ -107,6 +109,7 @@ def main():
 					if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1 and timestamp_data["preview_start"] == -1:
 						continue
 
+					"""
 					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == timestamp_data["episode_number"]]
 					if len(existing_indices) > 0:
 						if len(existing_indices) > 1:
@@ -114,6 +117,8 @@ def main():
 						series[existing_indices[0]] = timestamp_data
 					else:
 						series.append(timestamp_data)
+					"""
+					series.append(timestamp_data)
 
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)
@@ -136,6 +141,13 @@ def main():
 
 		kitsu_details = kitsu.details(kitsu_id)
 
+		# animethemes and animepahe use two different main title formats
+		kitsu_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
+
+		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
+		if not pahe_session:
+			continue
+
 		jp_title = None
 		titles = anime["titles"]
 		title_indices = [i for i in range(len(titles)) if titles[i]["type"] == "main"]
@@ -144,16 +156,32 @@ def main():
 		else:
 			jp_title = titles[0]
 
-		themes = animethemesmoe.download_themes(jp_title)
+		if anidb_id not in local_database:
+			local_database[anidb_id] = []
 
-		# animethemes and animepahe use two different main title formats
-		kitsu_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
+		series = local_database[anidb_id]
 
-		if len(themes) == 0:
-			logprint(f"[main.py] [WARNING] {kitsu_title} has no themes! Skipping")
+		# Check if op/ed timestamps are already defined
+		to_download = []
+		episode_count = kitsu_details['data']['attributes']['episodeCount']
+		if not episode_count or episode_count > len(series):
+			to_download = ['op','ed']
+		else:
+			if any(e['opening']['start'] == -1 or e['opening']['end'] == -1 for e in series):
+				to_download.append('op')
+			if any(e['ending']['start'] == -1 or e['ending']['end'] == -1 for e in series):
+				to_download.append('ed')
+		
+		if len(to_download) == 0:
+			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
 			continue
 
-		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
+		themes = animethemesmoe.download_themes(jp_title, to_download)
+
+		if len(themes) == 0:
+			logprint(f"[main.py] [WARNING] \"{kitsu_title}\" provided no themes! Skipping")
+			continue
+
 		episodes = animepahe.download_episodes(pahe_session)
 
 		for episode in episodes:
@@ -162,14 +190,15 @@ def main():
 
 			episode["mp3_path"] = mp3_path
 
+			if not os.path.exists(video_path) and os.path.exists(mp3_path):
+				continue
+
 			logprint(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
 
 			AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
 			os.remove(video_path)
 
 		logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
-
-		print(episodes)
 
 		fingerprint.fingerprint_episodes(str(anidb_id), episodes)
 

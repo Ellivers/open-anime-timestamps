@@ -38,7 +38,11 @@ def get_anime_session(name: str, anidb_id: int) -> list:
     logprint(f"[animepahe.py] [WARNING] Getting data for \"{name}\" gave status code {request.status_code} (1). Skipping anime.")
     return
 
-  anime = request.json()["data"][0]
+  search_result = request.json()
+  if search_result["total"] == 0:
+    logprint(f"[animepahe.py] [INFO] Found no results for \"{name}\". Skipping anime")
+    return
+  anime = search_result["data"][0]
 
   # Check if the ID matches
   page_request = requests.get(URL_BASE + '/a/' + str(anime["id"]),cookies=COOKIES)
@@ -73,6 +77,8 @@ def download_episodes(anime_session):
 
   for episode in episode_list:
     episode_number = episode["episode"] - (first_episode_num - 1)
+
+    logprint(f"[animepahe.py] [INFO] Getting download link for episode {episode_number} of anime with session {anime_session}")
     source = get_episode_download(anime_session, episode["session"])
 
     video_path = download_episode(source)
@@ -160,6 +166,10 @@ def get_episode_download(anime_session: str, episode_session: str) -> str:
 def download_episode(source: str) -> str:
   file_name = FILENAME_REGEX.findall(Path(source).name)[0]
   video_path = f"./episodes/{file_name}"
+
+  if os.path.exists(video_path) or os.path.exists(Path(video_path).with_suffix('.mp3')):
+    print(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
+    return video_path
 
   initial_response = requests.get(source)
 

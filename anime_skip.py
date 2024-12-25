@@ -76,44 +76,49 @@ def parse_timestamps(timestamps: list, episode_number: float):
 	# anime-skip has a lot of timestamp types, most of which don't make sense to me
 	# only taking a subset of them
 	# "Canon" type means resuming from something else, like at the end of an opening
-	timestamp_data["source"] = "anime_skip"
+	
+	# Timestamp list passed from main.py is never empty
+	timestamp_data["source"] = str(timestamps[0]["source"]).lower()
+	
+	ongoing_type = None
 
-	current_type = "Unknown"
 	for timestamp in timestamps:
-		if timestamp["type"]["name"] not in ["Canon","Unknown","Recap","Intro","New Intro","Credits","New Credits","Preview"]:
-			continue
 
-		timestamp_data["source"] = str(timestamp["source"]).lower()
+		timestamp_name = timestamp["type"]["name"]
+		if timestamp_name not in ["Canon","Unknown","Recap","Intro","New Intro","Credits","New Credits","Preview"]:
+			continue
 
 		timestamp_time = int(float(timestamp["at"]))
 
-		if current_type in ["Canon","Unknown"]:
-			if timestamp["type"]["name"] == "Recap":
-				timestamp_data["recap"]["start"] = timestamp_time
-				current_type = "Recap"
-			
-			if timestamp["type"]["name"] in ["New Intro","Intro"]:
-				timestamp_data["opening"]["start"] = timestamp_time
-				current_type = "Intro"
+		# Set start times
+		if timestamp_name in ["Intro","New Intro"]:
+			timestamp_data["opening"]["start"] = timestamp_time
+		elif timestamp_name in ["Credits","New Credits"]:
+			timestamp_data["ending"]["start"] = timestamp_time
+		elif timestamp_name == 'Recap':
+			timestamp_data["recap"]["start"] = timestamp_time
+		elif timestamp_name == 'Preview':
+			timestamp_data["preview_start"] = timestamp_time
 
-			if timestamp["type"]["name"] in ["New Credits","Credits"]:
-				timestamp_data["ending"]["start"] = timestamp_time
-				current_type = "Credits"
+		# Handle end times
+		if ongoing_type == "op":
+			timestamp_data["opening"]["end"] = timestamp_time
+		elif ongoing_type == "ed":
+			timestamp_data["ending"]["end"] = timestamp_time
+		elif ongoing_type == "rc":
+			timestamp_data["recap"]["end"] = timestamp_time
 
-			if timestamp["type"]["name"] == "Preview":
-				timestamp_data["preview_start"] = timestamp_time
-				break # assuming that previews are only right at the end
-
-		elif current_type in ["Recap","Intro","New Intro","Credits","New Credits"] and timestamp["type"]["name"] != current_type and timestamp["type"]["name"] in ["Canon","Unknown","Recap","New Intro","Intro"]:
-			if current_type == "Recap":
-				timestamp_data["recap"]["end"] = timestamp_time
-			if current_type in ["Intro","New Intro"]:
-				if timestamp["type"]["name"] in ["Credits","New Credits"]:
-					continue
-				timestamp_data["opening"]["end"] = timestamp_time
-			if current_type in ["Credits","New Credits"]:
-				timestamp_data["ending"]["end"] = timestamp_time
-
-			current_type = timestamp["type"]["name"]
+		if timestamp_name == 'Preview':
+			break  # assuming that previews are only right at the end
+		
+		# Set ongoing type
+		if timestamp_name in ["Intro", "New Intro"]:
+			ongoing_type = "op"
+		elif timestamp_name in ["Credits", "New Credits"]:
+			ongoing_type = "ed"
+		elif timestamp_name == 'Recap':
+			ongoing_type = "rc"
+		else:
+			ongoing_type = None
 
 	return timestamp_data
