@@ -6,5 +6,6 @@ parser.add_argument("-sa", "--skip-aggregation", dest="skip_aggregation", action
 parser.add_argument("-asi", "--aggregation-start-id", dest="aggregation_start", type=int, help="set the start ID for the first, aggregation, loop")
 parser.add_argument("-ssi", "--scrape-start-id", dest="scrape_start", type=int, help="set the start ID for the second, scraping, loop")
 parser.add_argument("-smr", "--scrape-max-retry", dest="scrape_max_retry", type=int, help="change the max retry count for episode scraping. Default 10")
+parser.add_argument("-ems", "--episodes-max-size", dest="episodes_max_size", type=int, help="allowed size of episodes on disk before they are processed (in MiB). Default 10GiB (10240 MiB)")
 
 parsed_args = parser.parse_args()

@@ -17,6 +17,10 @@ URL_API_BASE = URL_BASE + "/api?m="
 
 MAX_RETRY_COUNT = args.parsed_args.scrape_max_retry or 10
 
+# Total size taken up by downloaded episodes
+# Default value is 10GiB
+DEFAULT_MAX_DOWNLOAD_SIZE = 10*1024*1024*1024
+
 EXTERNAL_LINKS_SELECTOR = cssselect.CSSSelector('.external-links a')
 DL_REDIRECT_SELECTOR = cssselect.CSSSelector('#pickDownload a')
 
@@ -31,7 +35,7 @@ COOKIES = {"__ddg1_": "ghqix2xda4k1YXM8znC6", "__ddg2_": "kC5TSLlx7Md9Ua6A"}
 CHAR_MAP_DIGITS = "0123456789"
 CHAR_MAP_BASE = 10
 
-def get_anime_session(name: str, anidb_id: int) -> list:
+def get_anime_session(name: str, anidb_id: int|str) -> list:
   request = requests.get(URL_API_BASE + "search&q=" + urllib.parse.quote(name.replace(' -',' ')),cookies=COOKIES)
   
   if request.status_code != 200:
@@ -62,26 +66,43 @@ def get_anime_session(name: str, anidb_id: int) -> list:
     found_anidb_id = int(ANIDB_ID_REGEX.findall(link.attrib['href'])[0])
     break
 
-  if found_anidb_id != anidb_id:
+  if found_anidb_id != int(anidb_id):
     logprint(f"[animepahe.py] [WARNING] {name}: found AniDB ID {found_anidb_id} doesn't match inputted {anidb_id}. Skipping")
     return
   # End of ID check
 
   return anime["session"]
   
-def download_episodes(anime_session):
-  episode_list = get_episode_list(anime_session)
-  first_episode_num = episode_list[0]["episode"]
+def download_episodes(anime_session: str, full_episode_list: list, requirements: list, start_index=0) -> tuple[list, int]:
+  logprint(f"[animepahe.py] [INFO] Downloading episodes for anime with session {anime_session}")
+  first_episode_num = full_episode_list[0]["episode"]
+
+  current_download_size = 0
+  if args.parsed_args.episodes_max_size:
+    max_download_size = args.parsed_args.episodes_max_size * 1024 * 1024 # Arg is in MiB
+  else:
+    max_download_size = DEFAULT_MAX_DOWNLOAD_SIZE
 
   episode_files = []
 
-  for episode in episode_list:
+  for i in range(start_index, len(full_episode_list)):
+    episode = full_episode_list[i]
     episode_number = episode["episode"] - (first_episode_num - 1)
+
+    if current_download_size > max_download_size:
+      logprint(f"[animepahe.py] [INFO] Episode {episode_number} exceeded the size limit ({int((current_download_size - max_download_size)/1024)} KiB over). Episode batch ended")
+      return (episode_files, i)
+
+    if any(e['episode_number'] == episode_number and not (e['op'] or e['ed']) for e in requirements):
+      logprint(f"[animepahe.py] [INFO] Opening and ending timestamps for episode {episode_number} of anime with session {anime_session} are already defined. Skipping")
+      continue
 
     logprint(f"[animepahe.py] [INFO] Getting download link for episode {episode_number} of anime with session {anime_session}")
     source = get_episode_download(anime_session, episode["session"])
 
-    video_path = download_episode(source)
+    video_path, file_size = download_episode(source)
+    current_download_size += file_size
+
     if video_path == None:
       logprint(f"[animepahe.py] [WARNING] Couldn't get video path for episode {episode_number} with anime session {anime_session}")
       continue
@@ -93,7 +114,7 @@ def download_episodes(anime_session):
       "video_path": video_path
     })
 
-  return episode_files
+  return (episode_files, None)
 
 
 def get_episode_list_page(anime_session: str, page: int):
@@ -163,19 +184,19 @@ def get_episode_download(anime_session: str, episode_session: str) -> str:
   dl_url = requests.post(post_url, {'_token': post_token}, headers={"Referer": dl_page_url}, cookies=dl_page_response.cookies, allow_redirects=False)
   return dl_url.headers["Location"]
 
-def download_episode(source: str) -> str:
+def download_episode(source: str) -> tuple[str, int]:
   file_name = FILENAME_REGEX.findall(Path(source).name)[0]
   video_path = f"./episodes/{file_name}"
 
   if os.path.exists(video_path) or os.path.exists(Path(video_path).with_suffix('.mp3')):
     print(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
-    return video_path
+    return (video_path, os.path.getsize(video_path))
 
   initial_response = requests.get(source)
 
   if initial_response.status_code != 200:
     logprint(f"[animepahe.py] [WARNING] Episode {source} not reachable! (status code {initial_response.status_code})")
-    return None
+    return (None,0)
 
   content_length = int(initial_response.headers["content-length"] or 0)
   video_file = open(video_path, "wb")
@@ -222,6 +243,6 @@ def download_episode(source: str) -> str:
 
   if retries >= MAX_RETRY_COUNT:
     os.remove(video_path)
-    return None
+    return (None,0)
   
-  return video_path
+  return (video_path, content_length)

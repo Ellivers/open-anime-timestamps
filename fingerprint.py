@@ -15,8 +15,13 @@ from log import logprint
 import json
 import glob
 import os
+import pymysql.cursors
 from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer
+
+DROP_DATABASE_TABLE = """
+DROP TABLE IF EXISTS %s;
+"""
 
 # Load config file
 config = json.load(open("config.json"))
@@ -32,7 +37,7 @@ endings_recognizer = FileRecognizer(endings_dejavu)
 def fingerprint_episodes(anidb_id, episodes):
 	logprint("[fingerprint.py] [INFO] Adding openings to fingerprint database")
 
-	openings_dejavu.fingerprint_directory("openings", [".ogg"])
+	openings_dejavu.fingerprint_directory("openings", [".ogg"]) # Try using mp3 instead?
 
 	logprint("[fingerprint.py] [INFO] Adding endings to fingerprint database")
 
@@ -141,3 +146,28 @@ def fingerprint_episodes(anidb_id, episodes):
 	json.dump(local_database, local_database_file, indent=4)
 	local_database_file.truncate()
 	local_database_file.close()
+
+def drop_database_tables():
+	openings_database = pymysql.connect(
+		host=openings_database_cfg['database']['host'],
+		user=openings_database_cfg['database']['user'],
+		password=openings_database_cfg['database']['password'],
+		database=openings_database_cfg['database']['database']
+	)
+	with openings_database.cursor() as cursor:
+		cursor.execute(DROP_DATABASE_TABLE % "fingerprints")
+		cursor.execute(DROP_DATABASE_TABLE % "songs")
+	openings_database.commit()
+	openings_database.close()
+
+	endings_database = pymysql.connect(
+		host=endings_database_cfg['database']['host'],
+		user=endings_database_cfg['database']['user'],
+		password=endings_database_cfg['database']['password'],
+		database=endings_database_cfg['database']['database']
+	)
+	with endings_database.cursor() as cursor:
+		cursor.execute(DROP_DATABASE_TABLE % "fingerprints")
+		cursor.execute(DROP_DATABASE_TABLE % "songs")
+	endings_database.commit()
+	endings_database.close()

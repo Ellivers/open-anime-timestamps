@@ -143,64 +143,80 @@ def main():
 
 		# animethemes and animepahe use two different main title formats
 		kitsu_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
-
-		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
-		if not pahe_session:
-			continue
-
-		jp_title = None
-		titles = anime["titles"]
-		title_indices = [i for i in range(len(titles)) if titles[i]["type"] == "main"]
-		if len(title_indices) > 0:
-			jp_title = titles[title_indices[0]]["title"]
-		else:
-			jp_title = titles[0]
+		episode_count = kitsu_details['data']['attributes']['episodeCount']
 
 		if anidb_id not in local_database:
 			local_database[anidb_id] = []
 
 		series = local_database[anidb_id]
 
+		requirements = []
+		for ep in series:
+			requirements.append({
+				"episode_number": ep['episode_number'],
+				"op": ep['opening']['start'] == -1 or ep['opening']['end'] == -1,
+				"ed": ep['ending']['start'] == -1 or ep['ending']['end'] == -1
+			})
+
 		# Check if op/ed timestamps are already defined
-		to_download = []
-		episode_count = kitsu_details['data']['attributes']['episodeCount']
+		themes_to_download = []
 		if not episode_count or episode_count > len(series):
-			to_download = ['op','ed']
+			themes_to_download = ['op','ed']
 		else:
-			if any(e['opening']['start'] == -1 or e['opening']['end'] == -1 for e in series):
-				to_download.append('op')
-			if any(e['ending']['start'] == -1 or e['ending']['end'] == -1 for e in series):
-				to_download.append('ed')
-		
-		if len(to_download) == 0:
+			if any(e['op'] for e in requirements):
+				themes_to_download.append('op')
+			if any(e['ed'] for e in requirements):
+				themes_to_download.append('ed')
+
+		if len(themes_to_download) == 0:
 			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
 			continue
+		
+		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
+		if not pahe_session:
+			continue
 
-		themes = animethemesmoe.download_themes(jp_title, to_download)
+		jp_title = None
+		titles = anime["titles"]
+		title_reults = [title for title in titles if title["type"] == "main"]
+		if len(title_reults) > 0:
+			jp_title = title_reults[0]["title"]
+		else:
+			jp_title = titles[0]
+
+		themes = animethemesmoe.download_themes(jp_title, themes_to_download)
 
 		if len(themes) == 0:
 			logprint(f"[main.py] [WARNING] \"{kitsu_title}\" provided no themes! Skipping")
 			continue
 
-		episodes = animepahe.download_episodes(pahe_session)
+		total_episodes = animepahe.get_episode_list(pahe_session)
 
-		for episode in episodes:
-			video_path = episode["video_path"]
-			mp3_path = Path(video_path).with_suffix(".mp3")
+		episode_index = 0
+		while episode_index != None:
+			episodes, next_index = animepahe.download_episodes(pahe_session, total_episodes, requirements, episode_index)
 
-			episode["mp3_path"] = mp3_path
+			for episode in episodes:
+				video_path = episode["video_path"]
+				mp3_path = Path(video_path).with_suffix(".mp3")
 
-			if not os.path.exists(video_path) and os.path.exists(mp3_path):
-				continue
+				episode["mp3_path"] = mp3_path
 
-			logprint(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
+				if not os.path.exists(video_path) and os.path.exists(mp3_path):
+					continue
 
-			AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
-			os.remove(video_path)
+				logprint(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
 
-		logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
+				AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
+				os.remove(video_path)
 
-		fingerprint.fingerprint_episodes(str(anidb_id), episodes)
+			logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
+
+			fingerprint.fingerprint_episodes(str(anidb_id), episodes)
+
+			episode_index = next_index
+
+		fingerprint.drop_database_tables()
 
 		'''
 		titles = anime["title"]

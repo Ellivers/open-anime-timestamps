@@ -5,14 +5,12 @@ import os.path
 import args
 import requests
 import urllib.parse
-import re
 from tqdm import tqdm
-from difflib import SequenceMatcher
 
 from log import logprint
 
-def download_themes(name: str, to_download: list[str]):
-	themes = get_themes(name)
+def download_themes(name: str, anidb_id: int|str, to_download: list[str]):
+	themes = get_themes(name, anidb_id)
 	themes_list = []
 
 	for theme in themes:
@@ -34,11 +32,6 @@ def download_themes(name: str, to_download: list[str]):
 			continue
 
 		audio_path = f"{theme_folder}/{file_name}"
-		
-		similar_enough = SequenceMatcher(None, re.sub('\-(ED|OP)\d?\.\w+$','', file_name), name.replace(' ','')).ratio() > 0.75
-
-		if not similar_enough:
-			continue
 
 		if os.path.exists(audio_path):
 			print(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
@@ -74,23 +67,28 @@ def download_themes(name: str, to_download: list[str]):
 			progress_bar.close()
 
 		audio_file.close()
-		if similar_enough:
-			themes_list.append(audio_path)
+		themes_list.append(audio_path)
 	
 	return themes_list
 
 
-def get_themes(name):
-	response = requests.get(f"https://api.animethemes.moe/search?fields%5Bsearch%5D=animethemes&include%5Banimetheme%5D=animethemeentries.videos.audio&q={urllib.parse.quote(name, safe='')}")
+def get_themes(name, anidb_id):
+	response = requests.get(f"https://api.animethemes.moe/anime?include=resources,animethemes,animethemes.animethemeentries.videos.audio&q={urllib.parse.quote(name, safe='')}")
 	
 	if response.headers["Content-Type"] != "application/json":
 		return []
 	
-	if len(response.json()["search"]) == 0:
+	if len(response.json()["anime"]) == 0:
 		return []
 
-	data = response.json()["search"]
-	themes = data["animethemes"]
+	anime_list = response.json()["anime"]
+
+	themes = []
+	for anime in anime_list:
+		external_anidb_id = [resource['external_id'] for resource in anime['resources'] if resource['site'] == 'aniDB']
+		if len(external_anidb_id) == 0 or external_anidb_id[0] != int(anidb_id):
+			continue
+		themes = anime['animethemes']
 	
 	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for {name}")
 	
