@@ -1,9 +1,11 @@
 import json
 import subprocess
 import re
+import os
+import ffmpeg
 from utils import logprint, get_timestamp_template
 
-def parse_chapters(filename: str, anidb_id: str | int, episode_number: float):
+def parse_chapters(filename: str, anidb_id: str, episode_number: float) -> dict:
   chapters = get_chapters(filename)
   if len(chapters) == 0:
     return
@@ -24,7 +26,19 @@ def parse_chapters(filename: str, anidb_id: str | int, episode_number: float):
 
   op_lengths = []
   ed_lengths = []
-  # TODO: get the lengths of the audio files here
+  for file in os.scandir('./openings'):
+    info: dict = ffmpeg.probe(file)
+    duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
+    if not duration:
+      continue
+    op_lengths.append(float(duration))
+
+  for file in os.scandir('./endings'):
+    info: dict = ffmpeg.probe(file)
+    duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
+    if not duration:
+      continue
+    ed_lengths.append(float(duration))
 
   for i in range(len(chapters)):
     chapter = chapters[i]
@@ -33,24 +47,24 @@ def parse_chapters(filename: str, anidb_id: str | int, episode_number: float):
     else:
       next_chapter = None
 
-    start = round(chapter['start'])
-    end = round(chapter['end'])
+    start = float(chapter['start'])
+    end = float(chapter['end'])
 
     duration = end - start
 
     results = check_op_ed(duration, i / len(chapters), op_lengths, ed_lengths)
     if next_chapter:
-      results_next = check_op_ed(round(next_chapter['end'])-round(next_chapter['start']), (i+1) / len(chapters), op_lengths, ed_lengths)
+      results_next = check_op_ed(float(next_chapter['end'])-float(next_chapter['start']), (i+1) / len(chapters), op_lengths, ed_lengths)
     else:
       results_next = None
 
     if results == 'op' and results_next not in ['op','ed']:
-      timestamp_data['opening']['start'] = start
-      timestamp_data['opening']['end'] = end
+      timestamp_data['opening']['start'] = round(start)
+      timestamp_data['opening']['end'] = round(end)
 
     if results == 'ed' and results_next not in ['op','ed']:
-      timestamp_data['ending']['start'] = start
-      timestamp_data['ending']['end'] = end
+      timestamp_data['ending']['start'] = round(start)
+      timestamp_data['ending']['end'] = round(end)
 
   if len(indices) == 0:
     series.append(timestamp_data)
@@ -62,10 +76,10 @@ def parse_chapters(filename: str, anidb_id: str | int, episode_number: float):
 
   return timestamp_data
 
-def check_op_ed(duration: int, position: float, op_lengths: list, ed_lengths: list) -> str:
-  if position < 0.2 and any(abs(duration - l) <= 1 for l in op_lengths): # It might be at the beginning (an opening)
+def check_op_ed(duration: float, position: float, op_lengths: list, ed_lengths: list) -> str:
+  if position < 0.35 and any(abs(duration - l) <= 1.5 for l in op_lengths): # It might be at the beginning (an opening)
     return 'op'
-  if position > 0.6 and any(abs(duration - l) <= 1 for l in ed_lengths): # It might be at the end (an ending)
+  if position > 0.6 and any(abs(duration - l) <= 1.5 for l in ed_lengths): # It might be at the end (an ending)
     return 'ed'
   
   return None

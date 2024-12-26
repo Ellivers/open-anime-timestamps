@@ -201,7 +201,7 @@ def main():
 				video_path = episode["video_path"]
 
 				# Attempt parse any chapters the video file might have
-				chapters.parse_chapters(video_path, anidb_id, episode['episode_number'])
+				chapters.parse_chapters(video_path, str(anidb_id), episode['episode_number'])
 
 				mp3_path = Path(video_path).with_suffix(".mp3")
 				episode["mp3_path"] = mp3_path

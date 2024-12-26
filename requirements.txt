@@ -6,4 +6,5 @@ lxml==5.3.0
 cssselect==1.2.0
 tqdm==4.61.1
 PyMySQL[rsa]>=0.9.3
+ffmpeg-python==0.2.0
 https://github.com/JPery/dejavu/zipball/master
