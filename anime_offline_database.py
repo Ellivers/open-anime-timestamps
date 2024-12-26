@@ -2,7 +2,7 @@
 
 import requests
 import json
-from log import logprint
+from utils import logprint
 
 URL = "https://raw.githubusercontent.com/manami-project/anime-offline-database/master/anime-offline-database.json"
 PATH = "./anime-offline-database-processed.json"

@@ -10,7 +10,7 @@ from tqdm import tqdm
 import args
 import math
 from lxml import etree, cssselect
-from log import logprint
+from utils import logprint
 
 URL_BASE = "https://animepahe.ru"
 URL_API_BASE = URL_BASE + "/api?m="
@@ -73,7 +73,7 @@ def get_anime_session(name: str, anidb_id: int|str) -> list:
 
   return anime["session"]
   
-def download_episodes(anime_session: str, full_episode_list: list, requirements: list, start_index=0) -> tuple[list, int]:
+def download_episodes(anime_session: str, full_episode_list: list, requirements: list, start_index=0) -> tuple[list[dict], int]:
   logprint(f"[animepahe.py] [INFO] Downloading episodes for anime with session {anime_session}")
   first_episode_num = full_episode_list[0]["episode"]
 

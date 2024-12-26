@@ -1,6 +1,6 @@
 import requests
 
-from log import logprint
+from utils import logprint
 
 def details(id):
 	response = requests.get(f"https://kitsu.io/api/edge/anime/{id}")

@@ -7,7 +7,7 @@ import requests
 import urllib.parse
 from tqdm import tqdm
 
-from log import logprint
+from utils import logprint
 
 def download_themes(name: str, anidb_id: int|str, to_download: list[str]):
 	themes = get_themes(name, anidb_id)

@@ -11,7 +11,7 @@ except ImportError:
 	pass
 ##########################################################
 
-from log import logprint
+from utils import logprint, get_timestamp_template
 import json
 import glob
 import os
@@ -88,23 +88,7 @@ def fingerprint_episodes(anidb_id, episodes):
 				continue
 
 		if add_method == 'append':
-			timestamp_data = {
-				"source": "open_anime_timestamps",
-				"episode_number": episode['episode_number'],
-				"recap": {
-					"start": -1,
-					"end": -1
-				},
-				"opening": {
-					"start": -1,
-					"end": -1
-				},
-				"ending": {
-					"start": -1,
-					"end": -1
-				},
-				"preview_start": -1
-			}
+			timestamp_data = get_timestamp_template(episode['episode_number'], source="open_anime_timestamps")
 		else:
 			timestamp_data = series[indices[0]]
 

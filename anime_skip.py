@@ -1,7 +1,7 @@
 import time
 from python_graphql_client import GraphqlClient
 
-from log import logprint
+from utils import logprint, get_timestamp_template
 
 STANDARD_HEADERS = {
 	"X-Client-ID": "f80QZGOAqCIU1BKEhRs1v4I8hYVOEGle"
@@ -56,22 +56,7 @@ def find_episodes_by_external_id(id: str, headers=STANDARD_HEADERS):
 		return None
 
 def parse_timestamps(timestamps: list, episode_number: float):
-	timestamp_data = {
-		"episode_number": episode_number,
-		"recap": {
-			"start": -1,
-			"end": -1
-		},
-		"opening": {
-			"start": -1,
-			"end": -1
-		},
-		"ending": {
-			"start": -1,
-			"end": -1
-		},
-		"preview_start": -1
-	}
+	timestamp_data = get_timestamp_template(episode_number)
 
 	# anime-skip has a lot of timestamp types, most of which don't make sense to me
 	# only taking a subset of them

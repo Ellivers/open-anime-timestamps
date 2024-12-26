@@ -4,7 +4,7 @@ import json
 import time
 import urllib.parse
 import requests
-from log import logprint
+from utils import logprint
 
 PARSE_SERVER = "https://parseapi.back4app.com"
 APP_ID = "CfnxYFbrcy0Eh517CcjOAlrAOH9hfe7dpOqfMcJj"

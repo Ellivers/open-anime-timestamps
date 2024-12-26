@@ -13,7 +13,8 @@ import animethemesmoe
 #import twistmoe
 import animepahe
 import fingerprint
-from log import logprint
+import chapters
+from utils import logprint
 
 Path("./openings").mkdir(exist_ok=True)
 Path("./endings").mkdir(exist_ok=True)
@@ -198,8 +199,11 @@ def main():
 
 			for episode in episodes:
 				video_path = episode["video_path"]
-				mp3_path = Path(video_path).with_suffix(".mp3")
 
+				# Attempt parse any chapters the video file might have
+				chapters.parse_chapters(video_path, anidb_id, episode['episode_number'])
+
+				mp3_path = Path(video_path).with_suffix(".mp3")
 				episode["mp3_path"] = mp3_path
 
 				if not os.path.exists(video_path) and os.path.exists(mp3_path):
