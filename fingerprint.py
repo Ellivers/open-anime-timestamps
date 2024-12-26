@@ -104,6 +104,8 @@ def fingerprint_episodes(anidb_id, episodes):
 
 			timestamp_data["opening"]["start"] = opening_start
 			timestamp_data["opening"]["end"] = opening_end
+			if 'open_anime_timestamps' not in timestamp_data['sources']:
+				timestamp_data['sources'].append('open_anime_timestamps')
 		
 		if add_method != 'update_op':
 			logprint("[fingerprint.py] [INFO] Checking episode audio for ending")
@@ -118,6 +120,8 @@ def fingerprint_episodes(anidb_id, episodes):
 
 			timestamp_data["ending"]["start"] = ending_start
 			timestamp_data["ending"]["end"] = ending_end
+			if 'open_anime_timestamps' not in timestamp_data['sources']:
+				timestamp_data['sources'].append('open_anime_timestamps')
 
 		os.remove(episode["mp3_path"])
 

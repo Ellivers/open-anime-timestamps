@@ -2,6 +2,8 @@
 # Download series opening and endings
 
 import os.path
+
+import ffmpeg
 import args
 import requests
 import urllib.parse
@@ -9,7 +11,7 @@ from tqdm import tqdm
 
 from utils import logprint
 
-def download_themes(name: str, anidb_id: int|str, to_download: list[str]):
+def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> list[dict]:
 	themes = get_themes(name, anidb_id)
 	themes_list = []
 
@@ -67,7 +69,15 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]):
 			progress_bar.close()
 
 		audio_file.close()
-		themes_list.append(audio_path)
+
+		info: dict = ffmpeg.probe(audio_path)
+		duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
+
+		themes_list.append({
+			"file_path": audio_path,
+			"duration": float(duration),
+			"type": theme_type
+		})
 	
 	return themes_list
 

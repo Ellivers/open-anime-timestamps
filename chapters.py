@@ -1,11 +1,9 @@
 import json
 import subprocess
 import re
-import os
-import ffmpeg
 from utils import logprint, get_timestamp_template
 
-def parse_chapters(filename: str, anidb_id: str, episode_number: float) -> dict:
+def parse_chapters(filename: str, anidb_id: str, episode_number: float, themes: list[dict]) -> dict:
   chapters = get_chapters(filename)
   if len(chapters) == 0:
     return
@@ -26,19 +24,11 @@ def parse_chapters(filename: str, anidb_id: str, episode_number: float) -> dict:
 
   op_lengths = []
   ed_lengths = []
-  for file in os.scandir('./openings'):
-    info: dict = ffmpeg.probe(file)
-    duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
-    if not duration:
-      continue
-    op_lengths.append(float(duration))
-
-  for file in os.scandir('./endings'):
-    info: dict = ffmpeg.probe(file)
-    duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
-    if not duration:
-      continue
-    ed_lengths.append(float(duration))
+  for theme in themes:
+    if "OP" in theme['type']:
+      op_lengths.append(theme['duration'])
+    elif "ED" in theme['type']:
+      ed_lengths.append(theme['duration'])
 
   for i in range(len(chapters)):
     chapter = chapters[i]
@@ -58,11 +48,15 @@ def parse_chapters(filename: str, anidb_id: str, episode_number: float) -> dict:
     else:
       results_next = None
 
-    if results == 'op' and results_next not in ['op','ed']:
+    if results == 'op' and results_next not in ['op','ed'] \
+      and timestamp_data['opening']['start'] + timestamp_data['opening']['end'] == -2:
+
       timestamp_data['opening']['start'] = round(start)
       timestamp_data['opening']['end'] = round(end)
 
-    if results == 'ed' and results_next not in ['op','ed']:
+    if results == 'ed' and results_next not in ['op','ed'] \
+      and timestamp_data['ending']['start'] + timestamp_data['ending']['end'] == -2:
+
       timestamp_data['ending']['start'] = round(start)
       timestamp_data['ending']['end'] = round(end)
 

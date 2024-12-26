@@ -14,7 +14,8 @@ import animethemesmoe
 import animepahe
 import fingerprint
 import chapters
-from utils import logprint
+import math
+from utils import logprint, get_timestamp_template, merge_timestamps
 
 Path("./openings").mkdir(exist_ok=True)
 Path("./endings").mkdir(exist_ok=True)
@@ -32,6 +33,47 @@ def main():
 	local_database_file = open("timestamps.json", "r+")
 	local_database = json.load(local_database_file)
 
+	if args.parsed_args.combine_database:
+		path = args.parsed_args.combine_database
+		if not os.path.exists(path):
+			print(f"[main.py] [ERROR] Could not find file {path}")
+			return
+		file = open(path)
+		try:
+			import_db_file = json.load(file)
+		except json.decoder.JSONDecodeError:
+			print("[main.py] [ERROR] Inputted file is not a valid JSON file")
+			return
+		
+		if type(import_db_file) is not dict:
+			print("[main.py] [ERROR] Inputted file is not a JSON dict")
+			return
+		
+		for key, value in list(dict.items(import_db_file)):
+			if not key.isdigit():
+				continue
+			if type(value) is not list:
+				continue
+			if key not in local_database:
+				local_database[key] = []
+			series = local_database[key]
+			for ep in value:
+				episode_number = ep.get('episode_number')
+				if not episode_number:
+					continue
+				indices = [i for i in range(len(series)) if float(series[i]['episode_number']) == float(episode_number)]
+				if len(indices) == 0:
+					series.append(merge_timestamps(ep, get_timestamp_template(episode_number)))
+				else:
+					series[indices[0]] = merge_timestamps(ep, series[indices[0]])
+		
+		local_database_file.seek(0)
+		json.dump(local_database, local_database_file, indent=4)
+		local_database_file.truncate()
+		local_database_file.close()
+
+		return
+	
 	# Update the anime titles cache
 	anidb.update_title_cache()
 
@@ -190,6 +232,50 @@ def main():
 		if len(themes) == 0:
 			logprint(f"[main.py] [WARNING] \"{kitsu_title}\" provided no themes! Skipping")
 			continue
+
+		# Make sure that existing timestamps for this series have ends marked
+		if len(series) > 0 and \
+			any((ep['opening']['start'] != -1 and ep['opening']['end'] == -1) or (ep['ending']['start'] != -1 and ep['ending']['end'] == -1) for ep in series):
+
+			openings = [t for t in themes if "OP" in t['type']]
+			endings = [t for t in themes if "ED" in t['type']]
+
+			# All OPs and EDs have to have the same duration
+			# This is because multiple durations would make the timestamp data inaccurate
+			op_duration = -1
+			ed_duration = -1
+			if all(round(t['duration']) == round(openings[0]['duration']) for t in openings):
+				op_duration = math.floor(openings[0]['duration'])
+			if all(round(t['duration']) == round(endings[0]['duration']) for t in endings):
+				ed_duration = math.floor(endings[0]['duration'])
+			
+			for ep in series:
+				start = ep['opening']['start']
+				if op_duration != -1 and start != -1 and ep['opening']['end'] == -1:
+					ep['opening']['end'] = start + op_duration
+					continue
+
+				start = ep['ending']['start']
+				if ed_duration != -1 and start != -1 and ep['ending']['end'] == -1:
+					ep['ending']['end'] = start + ed_duration
+					continue
+
+		for theme in themes:
+			file_path = Path(theme["file_path"])
+
+			if file_path.suffix == '.mp3':
+				continue
+
+			mp3_path = Path(file_path).with_suffix(".mp3")
+
+			if not os.path.exists(file_path) and os.path.exists(mp3_path):
+				continue
+
+			logprint(f"[main.py] [INFO] Converting {file_path} to {mp3_path}")
+
+			AudioSegment.from_file(file_path).export(mp3_path, format="mp3")
+			os.remove(file_path)
+			theme["file_path"] = mp3_path
 
 		total_episodes = animepahe.get_episode_list(pahe_session)
 

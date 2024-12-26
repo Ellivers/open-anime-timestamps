@@ -56,14 +56,12 @@ def find_episodes_by_external_id(id: str, headers=STANDARD_HEADERS):
 		return None
 
 def parse_timestamps(timestamps: list, episode_number: float):
-	timestamp_data = get_timestamp_template(episode_number)
+	# Timestamp list passed from main.py is never empty
+	timestamp_data = get_timestamp_template(episode_number, str(timestamps[0]["source"]).lower())
 
 	# anime-skip has a lot of timestamp types, most of which don't make sense to me
 	# only taking a subset of them
 	# "Canon" type means resuming from something else, like at the end of an opening
-	
-	# Timestamp list passed from main.py is never empty
-	timestamp_data["source"] = str(timestamps[0]["source"]).lower()
 	
 	ongoing_type = None
 
