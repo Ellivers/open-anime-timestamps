@@ -90,6 +90,7 @@ def fingerprint_episodes(anidb_id, episodes):
 				add_method = 'update_ed'
 			else:
 				logprint(f"[fingerprint.py] [INFO] Episode {episode['episode_number']} does not need to be checked")
+				os.remove(episode["mp3_path"])
 				continue
 
 		if add_method == 'append':
@@ -101,32 +102,31 @@ def fingerprint_episodes(anidb_id, episodes):
 			logprint("[fingerprint.py] [INFO] Checking episode audio for opening")
 			
 			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
-			if not opening_results or len(opening_results["results"]) == 0:
-				logprint("[fingerprint.py] [INFO] No matches found for opening")
-				continue
-			opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
-			opening_end = opening_start + int(opening_results["results"][0]["audio_length"])
+			if opening_results and len(opening_results["results"]) > 0:
+				opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
+				opening_end = opening_start + int(opening_results["results"][0]["audio_length"])
 
-			timestamp_data["opening"]["start"] = opening_start
-			timestamp_data["opening"]["end"] = opening_end
-			if 'open_anime_timestamps' not in timestamp_data['sources']:
-				timestamp_data['sources'].append('open_anime_timestamps')
+				timestamp_data["opening"]["start"] = opening_start
+				timestamp_data["opening"]["end"] = opening_end
+				if 'open_anime_timestamps' not in timestamp_data['sources']:
+					timestamp_data['sources'].append('open_anime_timestamps')
+			else:
+				logprint("[fingerprint.py] [INFO] No matches found for opening")
 		
 		if add_method != 'update_op':
 			logprint("[fingerprint.py] [INFO] Checking episode audio for ending")
 			
 			ending_results = endings_recognizer.recognize_file(episode["mp3_path"])
-			if not ending_results or len(opening_results["results"]) == 0:
+			if ending_results and len(ending_results["results"]) > 0:
+				ending_start = int(abs(ending_results["results"][0]["offset_seconds"])) # convert to positive and round down
+				ending_end = ending_start + int(ending_results["results"][0]["audio_length"])
+
+				timestamp_data["ending"]["start"] = ending_start
+				timestamp_data["ending"]["end"] = ending_end
+				if 'open_anime_timestamps' not in timestamp_data['sources']:
+					timestamp_data['sources'].append('open_anime_timestamps')
+			else:
 				logprint("[fingerprint.py] [INFO] No matches found for ending")
-				continue
-
-			ending_start = int(abs(ending_results["results"][0]["offset_seconds"])) # convert to positive and round down
-			ending_end = ending_start + int(ending_results["results"][0]["audio_length"])
-
-			timestamp_data["ending"]["start"] = ending_start
-			timestamp_data["ending"]["end"] = ending_end
-			if 'open_anime_timestamps' not in timestamp_data['sources']:
-				timestamp_data['sources'].append('open_anime_timestamps')
 
 		os.remove(episode["mp3_path"])
 
