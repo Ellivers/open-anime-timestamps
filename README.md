@@ -12,10 +12,15 @@
 <a href="https://ko-fi.com/jonbarrow"><img alt="Ko-Fi" src="https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white" /></a>
 
 # What is this?
-Open Anime Timestamps is an open source tool for building a database of opening and ending theme timestamps for anime episodes. Feel free to open a PR with an updated `timestamps.json`
+Open Anime Timestamps is an open source tool for building a database of opening and ending theme timestamps for anime episodes. Feel free to open a PR with an updated `timestamps.json`.
 
 # This opening/ending timestamp is wrong!
-Open Anime Timestamps is an automated tool that tries to find where certain music segments are in an episode video file. There may be times when it thinks it's found the correct start but hasn't, because the episode uses an ending/opening song multiple times, it may not have an opening/ending, etc. These issues can be fixed by opening an issue report or a PR with the correct times
+Open Anime Timestamps is an automated tool that tries to find where certain music segments are in an episode video file. There may be times when it thinks it's found the correct start but hasn't, because the episode uses an ending/opening song multiple times, it may not have an opening/ending, etc. These issues can be fixed by opening an issue report or a PR with the correct times.
+
+# Requirements
+- Python 3.11.x (not higher)
+- MySQL
+- ffmpeg
 
 # Installation
 ```bash$
@@ -32,48 +37,85 @@ $ python3 main.py [arguments]
 ```
 
 # Arguments
-| Name                          | Alias        | Description                                                          |
-|-------------------------------|--------------|----------------------------------------------------------------------|
-|`--help`                       | `-h`         | Show the help dialog                                                 |
-|`--verbose`                    | `-v`         | Enable verbose logging                                               |
-|`--skip-aggregation`           | `-sa`        | Skips the first loop that aggregates timestamps from other databases |
-|`--aggregation-start-id VALUE` | `-asi VALUE` | Set the start ID for the first, aggregation, loop                    |
-|`--scrape-start-id VALUE`      | `-ssi VALUE` | Set the start ID for the second, scraping, loop                      |
-|`--scrape-max-retry VALUE`     | `-smr VALUE` | Change the max retry count for episode scraping. Default 10          |
+| Name                          | Alias        | Description                                                                    |
+|-------------------------------|--------------|--------------------------------------------------------------------------------|
+|`--help`                       | `-h`         | Show the help dialog                                                           |
+|`--verbose`                    | `-v`         | Enable verbose logging                                                         |
+|`--skip-aggregation`           | `-sa`        | Skips the first loop that aggregates timestamps from other databases           |
+|`--aggregation-start-id VALUE` | `-asi VALUE` | Set the start ID for the first, aggregation, loop                              |
+|`--scrape-start-id VALUE`      | `-ssi VALUE` | Set the start ID for the second, scraping, loop                                |
+|`--scrape-max-retry VALUE`     | `-smr VALUE` | Change the max retry count for episode scraping. Default 10                    |
+|`--episodes-max-size VALUE`    | `-ems VALUE` | Allowed size of episodes on disk before they are processed (in MiB). Default 10GiB (10240 MiB) |
+|`--combine-database PATH`    | `-cdb PATH` | Adds timestamps from the specified JSON file to the existing database, then exits |
 
 # How does it work?
-Acoustic fingerprinting and aggregating data from other databases. A database of fingerprints made from the opening and ending themes is used on individual episodes to determine where in each video file the opening/ending fingerprint appears. The data for the opening and endings, and episodes, is scraped from the sources below. Some data comes from existing databases, which we then build off here to try and create a "complete" database
+Acoustic fingerprinting and aggregating data from other databases. A database of fingerprints made from the opening and ending themes is used on individual episodes to determine where in each video file the opening/ending fingerprint appears. The data for the opening and endings, and episodes, is scraped from the sources below. Some data comes from existing databases, which we then build off here to try and create a "complete" database.
 
 # Fingerprinting
-The fingerprinting library used here is Dejavu. This process takes a good amount of RAM to run. Open Anime Timestamps was only tested on Ubuntu 20.04 running Python 3.8
+The fingerprinting library used here is Dejavu. This process takes a good amount of RAM to run. Open Anime Timestamps was tested on:
+- Ubuntu 20.04 running Python 3.8
+- Windows 10 running Python 3.11.9
 
 # Database format
-The "database" right now is just a plain json file. Each key is the AniDB ID for the series. Using MAL, Kitsu, or Anilist for IDs? Use an API like https://relations.yuna.moe/ to convert these IDs to AniDB IDs. Each value is an array of objects containing the source of the timestamp, episode number, opening start, ending start, beginning recap start, and ending "next episode" preview start (in seconds). Not each episode will have every timestamp, `-1` in a value means not found/missing timestamp
+The "database" right now is just a plain json file. Each key is the AniDB ID for the series. Using MAL, Kitsu, or Anilist for IDs? Use an API like https://relations.yuna.moe/ to convert these IDs to AniDB IDs. Each value is an array of objects containing the source of the timestamp, episode number, opening start and end, ending start and end, beginning recap start and end, and ending "next episode" preview start (all in seconds). Not each episode will have every timestamp, `-1` in a value means not found/missing timestamp.
 ```json
 {
 	"1": [
 		{
-			"source": "anime_skip",
+			"sources": [
+				"anime_skip"
+			],
 			"episode_number": 1,
-			"recap_start": -1,
-			"opening_start": 10,
-			"ending_start": 1300,
+			"recap": {
+				"start": -1,
+				"end": -1
+			},
+			"opening": {
+				"start": 10,
+				"end": 100
+			},
+			"ending": {
+				"start": 1300,
+				"end": 1390
+			},
 			"preview_start": -1
 		},
 		{
-			"source": "open_anime_timestamps",
+			"sources": [
+				"open_anime_timestamps"
+			],
 			"episode_number": 4,
-			"recap_start": 10,
-			"opening_start": 30,
-			"ending_start": 1300,
+			"recap": {
+				"start": 10,
+				"end": 30
+			},
+			"opening": {
+				"start": 30,
+				"end": 120
+			},
+			"ending": {
+				"start": 1300,
+				"end": 1400
+			},
 			"preview_start": -1
 		},
 		{
-			"source": "bettervrv",
+			"sources": [
+				"better_vrv"
+			],
 			"episode_number": 99,
-			"recap_start": -1,
-			"opening_start": 105,
-			"ending_start": 1300,
+			"recap": {
+				"start": -1,
+				"end": -1
+			},
+			"opening": {
+				"start": 105,
+				"end": 165
+			},
+			"ending": {
+				"start": 1300,
+				"end": 1390
+			},
 			"preview_start": 2000
 		}
 	]
@@ -84,24 +126,21 @@ The "database" right now is just a plain json file. Each key is the AniDB ID for
 ## This projects takes data from multiple sources
 | URL                                                      | Use                                               |
 |----------------------------------------------------------|---------------------------------------------------|
-| https://wiki.anidb.net/API#Anime_Titles                  | Anime title list                                  |
+| https://github.com/c032/anidb-animetitles-archive        | Anime title list dumps                            |
 | https://github.com/manami-project/anime-offline-database | AniDB IDs to MAL/Kitsu IDs                        |
-| https://themes.moe                                       | Anime opening/ending themes                       |
-| https://twist.moe                                        | Anime episodes                                    |
-| https://github.com/worldveil/dejavu                      | Acoustic fingerprinting                           |
+| https://animethemes.moe                                  | Anime opening/ending themes                       |
+| https://animepahe.ru                                     | Anime episodes                                    |
+| https://github.com/worldveil/dejavu ([used fork](https://github.com/JPery/dejavu))                     | Acoustic fingerprinting                           |
 | https://www.anime-skip.com                               | Other timestamp DB                                |
 | https://tuckerchap.in/BetterVRV                          | Other timestamp DB                                |
 | https://github.com/montylion                             | Running this tool to build most of the timestamps |
+| https://github.com/SenZmaKi/Senpwai                      | Methods for scraping AnimePahe                    |
 
 # TODO
-- [x] Logging
-- [x] Remove `asyncio` from twist.moe requests. This will not make it faster, it's only there so the requests don't have to wait for `AudioSegment`. Maybe it would be better to download the episodes and then batch convert them?
 - [ ] Speed this thing up. Right now it takes FOREVER to scrape
-- [x] Switch from https://relations.yuna.moe to a local offline database with https://github.com/manami-project/anime-offline-database
-- [ ] Implement `close` method in `stream_response.py`. Currently only stubbed to get `AudioSegment` working
-- [x] Fix scrape times. Animixplay can be slow as hell
-- [ ] Add opening/ending length times for easier skipping
-- [x] Add more sources for episodes? animepahe and twistmoe might be viable (none have a complete catalog, but together might)
+- [ ] Fix scrape times. AnimePahe can be slow as hell
+- [x] Add opening/ending length times for easier skipping
+- [ ] Add more sources for episodes? gogoanime might be viable
 - [ ] Better comments
 - [ ] Clean up the code
-- [x] Add BetterVRV support
+- [ ] Re-add BetterVRV support
