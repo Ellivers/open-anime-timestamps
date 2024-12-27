@@ -1,7 +1,7 @@
 
 # Download series opening and endings
 
-import os.path
+from pathlib import Path
 
 import ffmpeg
 import args
@@ -35,7 +35,7 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> lis
 
 		audio_path = f"{theme_folder}/{file_name}"
 
-		if os.path.exists(audio_path):
+		if Path.exists(Path(audio_path)) or Path.exists(Path(audio_path).with_suffix('.mp3')):
 			print(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
 			themes_list.append(audio_path)
 			continue
