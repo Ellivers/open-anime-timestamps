@@ -76,15 +76,20 @@ def fingerprint_episodes(anidb_id, episodes):
 		if len(indices) > 0:
 			# Check if timestamps are incomplete, and if so, what to update
 			ep = series[indices[0]]
-			opening_parts = [ep['opening']['start'],ep['opening']['end']]
-			ending_parts = [ep['ending']['start'],ep['ending']['end']]
-			if -1 in opening_parts and -1 in ending_parts:
+			opening_count = len(list(os.scandir('./openings')))
+			ending_count = len(list(os.scandir('./endings')))
+
+			update_opening = -1 in [ep['opening']['start'],ep['opening']['end']] and opening_count > 0
+			update_ending = -1 in [ep['ending']['start'],ep['ending']['end']] and ending_count > 0
+
+			if update_opening and update_ending:
 				add_method = 'update_all'
-			elif -1 in opening_parts and -1 not in ending_parts:
+			elif update_opening and not update_ending:
 				add_method = 'update_op'
-			elif -1 in ending_parts:
+			elif update_ending:
 				add_method = 'update_ed'
 			else:
+				logprint(f"[fingerprint.py] [INFO] Episode {episode['episode_number']} does not need to be checked")
 				continue
 
 		if add_method == 'append':
@@ -96,7 +101,7 @@ def fingerprint_episodes(anidb_id, episodes):
 			logprint("[fingerprint.py] [INFO] Checking episode audio for opening")
 			
 			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
-			if len(opening_results["results"]) == 0:
+			if not opening_results or len(opening_results["results"]) == 0:
 				logprint("[fingerprint.py] [INFO] No matches found for opening")
 				continue
 			opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
@@ -111,7 +116,7 @@ def fingerprint_episodes(anidb_id, episodes):
 			logprint("[fingerprint.py] [INFO] Checking episode audio for ending")
 			
 			ending_results = endings_recognizer.recognize_file(episode["mp3_path"])
-			if len(opening_results["results"]) == 0:
+			if not ending_results or len(opening_results["results"]) == 0:
 				logprint("[fingerprint.py] [INFO] No matches found for ending")
 				continue
 
@@ -136,6 +141,7 @@ def fingerprint_episodes(anidb_id, episodes):
 	local_database_file.close()
 
 def drop_database_tables():
+	logprint("[fingerprint.py] [INFO] Clearing databases")
 	openings_database = pymysql.connect(
 		host=openings_database_cfg['database']['host'],
 		user=openings_database_cfg['database']['user'],
