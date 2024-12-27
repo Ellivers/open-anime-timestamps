@@ -1,7 +1,10 @@
 import args
 
-def logprint(message: str, require_verbose=True):
-  if args.parsed_args.verbose or not require_verbose:
+def is_not_silent():
+	return not args.parsed_args.silent
+
+def logprint(message: str, ignore_silent=False):
+  if is_not_silent() or ignore_silent:
     print(message)
 
 def get_timestamp_template(episode_number, source=None):

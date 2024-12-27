@@ -10,7 +10,7 @@ from tqdm import tqdm
 import args
 import math
 from lxml import etree, cssselect
-from utils import logprint
+from utils import is_not_silent, logprint
 
 URL_BASE = "https://animepahe.ru"
 URL_API_BASE = URL_BASE + "/api?m="
@@ -208,7 +208,7 @@ def download_episode(source: str) -> tuple[str, int]:
   downloaded_bytes = 0
   retries = 0
 
-  if args.parsed_args.verbose:
+  if is_not_silent():
     progress_bar = tqdm(total=content_length, unit='iB', unit_scale=True)
     progress_bar.set_description(f"[animepahe.py] [INFO] Downloading {file_name}")
 
@@ -219,7 +219,7 @@ def download_episode(source: str) -> tuple[str, int]:
         chunk_len = len(chunk)
         downloaded_bytes += chunk_len
         
-        if args.parsed_args.verbose:
+        if is_not_silent():
           progress_bar.update(chunk_len)
 
         video_file.write(chunk)
@@ -232,7 +232,7 @@ def download_episode(source: str) -> tuple[str, int]:
       retries += 1
 
       if retries >= MAX_RETRY_COUNT:
-        if args.parsed_args.verbose:
+        if is_not_silent():
           logprint(f"[animepahe.py] [WARNING] Max retries hit. Skipping episode")
           progress_bar.close()
         break
@@ -241,7 +241,7 @@ def download_episode(source: str) -> tuple[str, int]:
       
       time.sleep(1)
 
-  if args.parsed_args.verbose:
+  if is_not_silent():
     progress_bar.close()
 
   video_file.close()

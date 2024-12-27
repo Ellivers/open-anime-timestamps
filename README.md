@@ -64,7 +64,7 @@ $ python3 main.py [arguments]
 | Name                          | Alias        | Description                                                                    |
 |-------------------------------|--------------|--------------------------------------------------------------------------------|
 |`--help`                       | `-h`         | Show the help dialog                                                           |
-|`--verbose`                    | `-v`         | Enable verbose logging                                                         |
+|`--silent`                     | `-s`         | Disable logging when not using --combine-database                              |
 |`--skip-aggregation`           | `-sa`        | Skips the first loop that aggregates timestamps from other databases           |
 |`--aggregation-start-id VALUE` | `-asi VALUE` | Set the start ID for the first, aggregation, loop                              |
 |`--scrape-start-id VALUE`      | `-ssi VALUE` | Set the start ID for the second, scraping, loop                                |

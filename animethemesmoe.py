@@ -9,7 +9,7 @@ import requests
 import urllib.parse
 from tqdm import tqdm
 
-from utils import logprint
+from utils import is_not_silent, logprint
 
 def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> list[dict]:
 	themes = get_themes(name, anidb_id)
@@ -63,19 +63,19 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> lis
 		
 		audio_file = open(audio_path, "wb")
 
-		if args.parsed_args.verbose:
+		if is_not_silent():
 			content_length = int(response.headers["content-length"] or 0)
 			progress_bar = tqdm(total=content_length, unit='iB', unit_scale=True)
 			progress_bar.set_description(f"[animethemesmoe.py] [INFO] Downloading {file_name}")
 		
 
 		for chunk in response.iter_content(chunk_size=1024*1024):
-			if args.parsed_args.verbose:
+			if is_not_silent():
 				progress_bar.update(len(chunk))
 
 			audio_file.write(chunk)
 
-		if args.parsed_args.verbose:
+		if is_not_silent():
 			progress_bar.close()
 
 		audio_file.close()
