@@ -188,9 +188,14 @@ def download_episode(source: str) -> tuple[str, int]:
   file_name = FILENAME_REGEX.findall(Path(source).name)[0]
   video_path = f"./episodes/{file_name}"
 
-  if os.path.exists(video_path) or os.path.exists(Path(video_path).with_suffix('.mp3')):
+  mp3_path_exists = os.path.exists(Path(video_path).with_suffix('.mp3'))
+  if os.path.exists(video_path) or mp3_path_exists:
     print(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
-    return (video_path, os.path.getsize(video_path))
+    if not mp3_path_exists:
+      size = os.path.getsize(video_path)
+    else:
+      size = os.path.getsize(str(Path(video_path).with_suffix('.mp3')))
+    return (video_path, size)
 
   initial_response = requests.head(source)
 

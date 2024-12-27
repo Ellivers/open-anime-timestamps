@@ -3,11 +3,11 @@ import subprocess
 import re
 from utils import logprint, get_timestamp_template
 
-def parse_chapters(filename: str, anidb_id: str, episode_number: float, themes: list[dict]) -> dict:
-  chapters = get_chapters(filename)
+def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes: list[dict]) -> dict:
+  chapters = get_chapters(file_path)
   if len(chapters) == 0:
     return
-  logprint(f"[chapters.py] [INFO] Found chapter data in {filename.rsplit('/')[1]}")
+  logprint(f"[chapters.py] [INFO] Found chapter data in {file_path.rsplit('/', 1)[1]}")
   local_database_file = open("timestamps.json", "r+")
   local_database = json.load(local_database_file)
 

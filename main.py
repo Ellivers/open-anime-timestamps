@@ -286,14 +286,14 @@ def main():
 			for episode in episodes:
 				video_path = episode["video_path"]
 
-				# Attempt parse any chapters the video file might have
-				chapters.parse_chapters(video_path, str(anidb_id), episode['episode_number'], themes)
-
 				mp3_path = Path(video_path).with_suffix(".mp3")
 				episode["mp3_path"] = mp3_path
 
 				if not os.path.exists(video_path) and os.path.exists(mp3_path):
 					continue
+
+				# Attempt parse any chapters the video file might have
+				chapters.parse_chapters(video_path, str(anidb_id), episode['episode_number'], themes)
 
 				logprint(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
 
