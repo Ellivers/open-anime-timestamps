@@ -28,8 +28,32 @@ $ sudo apt-get install python3-dev libmysqlclient-dev python3-numpy python3-matp
 $ pip3 install -r requirements.txt
 ```
 
+You will also need to create two MySQL databases and set up `config.json`. An example config [`example_config.json`](/example_config.json) is available.
+```json
+{
+	"openings": {
+		"database": {
+			"host": "127.0.0.1",
+			"user": "root",
+			"password": "",
+			"database": "openings"
+		},
+		"database_type": "mysql"
+	},
+	"endings": {
+		"database": {
+			"host": "127.0.0.1",
+			"user": "root",
+			"password": "",
+			"database": "endings"
+		},
+		"database_type": "mysql"
+	}
+}
+```
+
 # Installation (Dejavu)
-The above SHOULD work to install all dependencies needed to install Dejavu on Ubuntu 20.04. Dejavu is somewhat annoying to install, you may have to manually install some packages or package versions for your setup. If you need help, refer to the Dejavu repo https://github.com/worldveil/dejavu/
+The above SHOULD work to install all dependencies needed to install Dejavu on Ubuntu 20.04 and Windows 10. Dejavu is somewhat annoying to install, you may have to manually install some packages or package versions for your setup. If you need help, refer to the Dejavu repo https://github.com/worldveil/dejavu/ or the updated fork that Open Anime Timestamps uses https://github.com/JPery/dejavu
 
 # Usage
 ```bash
@@ -45,7 +69,7 @@ $ python3 main.py [arguments]
 |`--aggregation-start-id VALUE` | `-asi VALUE` | Set the start ID for the first, aggregation, loop                              |
 |`--scrape-start-id VALUE`      | `-ssi VALUE` | Set the start ID for the second, scraping, loop                                |
 |`--scrape-max-retry VALUE`     | `-smr VALUE` | Change the max retry count for episode scraping. Default 10                    |
-|`--episodes-max-size VALUE`    | `-ems VALUE` | Allowed size of episodes on disk before they are processed (in MiB). Default 10GiB (10240 MiB) |
+|`--episodes-max-size VALUE`    | `-ems VALUE` | Threshold for size of episodes on disk before they are processed (in MiB). Default 10GiB (10240 MiB) |
 |`--combine-database PATH`    | `-cdb PATH` | Adds timestamps from the specified JSON file to the existing database, then exits |
 
 # How does it work?
@@ -54,7 +78,7 @@ Acoustic fingerprinting and aggregating data from other databases. A database of
 # Fingerprinting
 The fingerprinting library used here is Dejavu. This process takes a good amount of RAM to run. Open Anime Timestamps was tested on:
 - Ubuntu 20.04 running Python 3.8
-- Windows 10 running Python 3.11.9
+- Windows 10 running Python 3.11.9 and Python 3.10
 
 # Database format
 The "database" right now is just a plain json file. Each key is the AniDB ID for the series. Using MAL, Kitsu, or Anilist for IDs? Use an API like https://relations.yuna.moe/ to convert these IDs to AniDB IDs. Each value is an array of objects containing the source of the timestamp, episode number, opening start and end, ending start and end, beginning recap start and end, and ending "next episode" preview start (all in seconds). Not each episode will have every timestamp, `-1` in a value means not found/missing timestamp.
@@ -101,7 +125,8 @@ The "database" right now is just a plain json file. Each key is the AniDB ID for
 		},
 		{
 			"sources": [
-				"better_vrv"
+				"better_vrv",
+				"open_anime_timestamps"
 			],
 			"episode_number": 99,
 			"recap": {
@@ -138,7 +163,6 @@ The "database" right now is just a plain json file. Each key is the AniDB ID for
 
 # TODO
 - [ ] Speed this thing up. Right now it takes FOREVER to scrape
-- [ ] Fix scrape times. AnimePahe can be slow as hell
 - [x] Add opening/ending length times for easier skipping
 - [ ] Add more sources for episodes? gogoanime might be viable
 - [ ] Better comments
