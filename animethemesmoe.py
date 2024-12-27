@@ -38,7 +38,7 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> lis
 		if Path.exists(Path(audio_path).with_suffix('.mp3')):
 			audio_path = str(Path(audio_path).with_suffix('.mp3'))
 		if Path.exists(Path(audio_path)):
-			print(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
+			logprint(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
 
 			info: dict = ffmpeg.probe(audio_path)
 			duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')

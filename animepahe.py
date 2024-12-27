@@ -120,7 +120,7 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
 def get_episode_list_page(anime_session: str, page: int):
   return requests.get(URL_API_BASE + f"release&sort=episode_asc&page={page}&id={anime_session}",cookies=COOKIES).json()
 
-def get_episode_list(anime_session: str):
+def get_episode_list(anime_session: str) -> list:
   response = get_episode_list_page(anime_session, 1)
 
   episode_list = response["data"]
@@ -190,7 +190,7 @@ def download_episode(source: str) -> tuple[str, int]:
 
   mp3_path_exists = os.path.exists(Path(video_path).with_suffix('.mp3'))
   if os.path.exists(video_path) or mp3_path_exists:
-    print(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
+    logprint(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
     if not mp3_path_exists:
       size = os.path.getsize(video_path)
     else:

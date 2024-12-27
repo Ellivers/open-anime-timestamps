@@ -278,6 +278,7 @@ def main():
 			theme["file_path"] = mp3_path
 
 		total_episodes = animepahe.get_episode_list(pahe_session)
+		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\"")
 
 		episode_index = 0
 		while episode_index != None:
