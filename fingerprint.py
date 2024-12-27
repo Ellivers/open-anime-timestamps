@@ -65,9 +65,10 @@ def fingerprint_episodes(anidb_id, episodes):
 	series = local_database[anidb_id]
 
 	for episode in episodes:
+		episode_number = episode['episode_number']
 
 		add_method = 'append'
-		indices = [i for i in range(len(series)) if series[i]['episode_number'] == episode['episode_number']]
+		indices = [i for i in range(len(series)) if series[i]['episode_number'] == episode_number]
 		if len(indices) > 0:
 			# Check if timestamps are incomplete, and if so, what to update
 			ep = series[indices[0]]
@@ -84,17 +85,17 @@ def fingerprint_episodes(anidb_id, episodes):
 			elif update_ending:
 				add_method = 'update_ed'
 			else:
-				logprint(f"[fingerprint.py] [INFO] Episode {episode['episode_number']} does not need to be checked")
+				logprint(f"[fingerprint.py] [INFO] Episode {episode_number} does not need to be checked")
 				os.remove(episode["mp3_path"])
 				continue
 
 		if add_method == 'append':
-			timestamp_data = get_timestamp_template(episode['episode_number'], source="open_anime_timestamps")
+			timestamp_data = get_timestamp_template(episode_number, source="open_anime_timestamps")
 		else:
 			timestamp_data = series[indices[0]]
 
 		if add_method != 'update_ed':
-			logprint("[fingerprint.py] [INFO] Checking episode audio for opening")
+			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for opening")
 			
 			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
 			if 'results' in opening_results and len(opening_results["results"]) > 0:
@@ -109,7 +110,7 @@ def fingerprint_episodes(anidb_id, episodes):
 				logprint("[fingerprint.py] [INFO] No matches found for opening")
 		
 		if add_method != 'update_op':
-			logprint("[fingerprint.py] [INFO] Checking episode audio for ending")
+			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for ending")
 			
 			ending_results = endings_recognizer.recognize_file(episode["mp3_path"])
 			if 'results' in ending_results and len(ending_results["results"]) > 0:
