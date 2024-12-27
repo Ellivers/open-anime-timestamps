@@ -35,9 +35,19 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> lis
 
 		audio_path = f"{theme_folder}/{file_name}"
 
-		if Path.exists(Path(audio_path)) or Path.exists(Path(audio_path).with_suffix('.mp3')):
+		if Path.exists(Path(audio_path).with_suffix('.mp3')):
+			audio_path = Path(audio_path).with_suffix('.mp3')
+		if Path.exists(Path(audio_path)):
 			print(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
-			themes_list.append(audio_path)
+
+			info: dict = ffmpeg.probe(audio_path)
+			duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
+
+			themes_list.append({
+				"file_path": str(audio_path),
+				"duration": float(duration),
+				"type": theme_type
+			})
 			continue
 
 		headers = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4521.0 Safari/537.36 Edg/93.0.910.5"}
