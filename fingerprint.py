@@ -37,11 +37,11 @@ endings_recognizer = FileRecognizer(endings_dejavu)
 def fingerprint_episodes(anidb_id, episodes):
 	logprint("[fingerprint.py] [INFO] Adding openings to fingerprint database")
 
-	openings_dejavu.fingerprint_directory("openings", [".ogg"]) # Try using mp3 instead?
+	openings_dejavu.fingerprint_directory("openings", [".mp3"])
 
 	logprint("[fingerprint.py] [INFO] Adding endings to fingerprint database")
 
-	endings_dejavu.fingerprint_directory("endings", [".ogg"])
+	endings_dejavu.fingerprint_directory("endings", [".mp3"])
 
 	# Clear the ending/opening folders after done
 	logprint("[fingerprint.py] [INFO] Clearing openings folder")
