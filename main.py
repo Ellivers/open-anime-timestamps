@@ -271,7 +271,7 @@ def main():
 			if os.path.exists(mp3_path):
 				continue
 
-			logprint(f"[main.py] [INFO] Converting {file_path} to {mp3_path}")
+			logprint(f"[main.py] [INFO] Converting {file_path} to mp3")
 
 			AudioSegment.from_file(file_path).export(mp3_path, format="mp3")
 			os.remove(file_path)
@@ -296,7 +296,7 @@ def main():
 				# Attempt parse any chapters the video file might have
 				chapters.parse_chapters(video_path, str(anidb_id), episode['episode_number'], themes)
 
-				logprint(f"[main.py] [INFO] Converting {video_path} to {mp3_path}")
+				logprint(f"[main.py] [INFO] Converting {video_path} to mp3")
 
 				AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
 				os.remove(video_path)

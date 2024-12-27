@@ -15,13 +15,8 @@ from utils import logprint, get_timestamp_template
 import json
 import glob
 import os
-import pymysql.cursors
 from dejavu import Dejavu
 from dejavu.recognize import FileRecognizer
-
-DROP_DATABASE_TABLE = """
-DROP TABLE IF EXISTS %s;
-"""
 
 # Load config file
 config = json.load(open("config.json"))
@@ -76,8 +71,8 @@ def fingerprint_episodes(anidb_id, episodes):
 		if len(indices) > 0:
 			# Check if timestamps are incomplete, and if so, what to update
 			ep = series[indices[0]]
-			opening_count = len(list(os.scandir('./openings')))
-			ending_count = len(list(os.scandir('./endings')))
+			opening_count = openings_dejavu.db.get_num_songs()
+			ending_count = endings_dejavu.db.get_num_songs()
 
 			update_opening = -1 in [ep['opening']['start'],ep['opening']['end']] and opening_count > 0
 			update_ending = -1 in [ep['ending']['start'],ep['ending']['end']] and ending_count > 0
@@ -102,7 +97,7 @@ def fingerprint_episodes(anidb_id, episodes):
 			logprint("[fingerprint.py] [INFO] Checking episode audio for opening")
 			
 			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
-			if opening_results and len(opening_results["results"]) > 0:
+			if 'results' in opening_results and len(opening_results["results"]) > 0:
 				opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
 				opening_end = opening_start + int(opening_results["results"][0]["audio_length"])
 
@@ -117,7 +112,7 @@ def fingerprint_episodes(anidb_id, episodes):
 			logprint("[fingerprint.py] [INFO] Checking episode audio for ending")
 			
 			ending_results = endings_recognizer.recognize_file(episode["mp3_path"])
-			if ending_results and len(ending_results["results"]) > 0:
+			if 'results' in ending_results and len(ending_results["results"]) > 0:
 				ending_start = int(abs(ending_results["results"][0]["offset_seconds"])) # convert to positive and round down
 				ending_end = ending_start + int(ending_results["results"][0]["audio_length"])
 
@@ -142,26 +137,5 @@ def fingerprint_episodes(anidb_id, episodes):
 
 def drop_database_tables():
 	logprint("[fingerprint.py] [INFO] Clearing databases")
-	openings_database = pymysql.connect(
-		host=openings_database_cfg['database']['host'],
-		user=openings_database_cfg['database']['user'],
-		password=openings_database_cfg['database']['password'],
-		database=openings_database_cfg['database']['database']
-	)
-	with openings_database.cursor() as cursor:
-		cursor.execute(DROP_DATABASE_TABLE % "fingerprints")
-		cursor.execute(DROP_DATABASE_TABLE % "songs")
-	openings_database.commit()
-	openings_database.close()
-
-	endings_database = pymysql.connect(
-		host=endings_database_cfg['database']['host'],
-		user=endings_database_cfg['database']['user'],
-		password=endings_database_cfg['database']['password'],
-		database=endings_database_cfg['database']['database']
-	)
-	with endings_database.cursor() as cursor:
-		cursor.execute(DROP_DATABASE_TABLE % "fingerprints")
-		cursor.execute(DROP_DATABASE_TABLE % "songs")
-	endings_database.commit()
-	endings_database.close()
+	openings_dejavu.db.empty()
+	endings_dejavu.db.empty()
