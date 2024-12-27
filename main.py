@@ -268,7 +268,7 @@ def main():
 
 			mp3_path = Path(file_path).with_suffix(".mp3")
 
-			if not os.path.exists(file_path) and os.path.exists(mp3_path):
+			if os.path.exists(mp3_path):
 				continue
 
 			logprint(f"[main.py] [INFO] Converting {file_path} to {mp3_path}")
