@@ -192,7 +192,7 @@ def download_episode(source: str) -> tuple[str, int]:
     print(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
     return (video_path, os.path.getsize(video_path))
 
-  initial_response = requests.get(source)
+  initial_response = requests.head(source)
 
   if initial_response.status_code != 200:
     logprint(f"[animepahe.py] [WARNING] Episode {source} not reachable! (status code {initial_response.status_code})")
