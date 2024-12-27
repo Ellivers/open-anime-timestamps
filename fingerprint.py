@@ -97,10 +97,10 @@ def fingerprint_episodes(anidb_id, episodes):
 		if add_method != 'update_ed':
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for opening")
 			
-			opening_results = openings_recognizer.recognize_file(episode["mp3_path"])
-			if 'results' in opening_results and len(opening_results["results"]) > 0:
-				opening_start = int(abs(opening_results["results"][0]["offset_seconds"])) # convert to positive and round down
-				opening_end = opening_start + int(opening_results["results"][0]["audio_length"])
+			opening_result = openings_recognizer.recognize_file(episode["mp3_path"])
+			if opening_result:
+				opening_start = int(abs(opening_result["offset_seconds"])) # convert to positive and round down
+				opening_end = opening_start + int(opening_result["audio_length"])
 
 				timestamp_data["opening"]["start"] = opening_start
 				timestamp_data["opening"]["end"] = opening_end
@@ -112,10 +112,10 @@ def fingerprint_episodes(anidb_id, episodes):
 		if add_method != 'update_op':
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for ending")
 			
-			ending_results = endings_recognizer.recognize_file(episode["mp3_path"])
-			if 'results' in ending_results and len(ending_results["results"]) > 0:
-				ending_start = int(abs(ending_results["results"][0]["offset_seconds"])) # convert to positive and round down
-				ending_end = ending_start + int(ending_results["results"][0]["audio_length"])
+			ending_result = endings_recognizer.recognize_file(episode["mp3_path"])
+			if ending_result:
+				ending_start = int(abs(ending_result["offset_seconds"])) # convert to positive and round down
+				ending_end = ending_start + int(ending_result["audio_length"])
 
 				timestamp_data["ending"]["start"] = ending_start
 				timestamp_data["ending"]["end"] = ending_end
