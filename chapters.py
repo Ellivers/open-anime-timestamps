@@ -53,12 +53,16 @@ def parse_chapters(filename: str, anidb_id: str, episode_number: float, themes: 
 
       timestamp_data['opening']['start'] = round(start)
       timestamp_data['opening']['end'] = round(end)
+      if 'chapter_data' not in timestamp_data['sources']:
+        timestamp_data['sources'].append('chapter_data')
 
     if results == 'ed' and results_next not in ['op','ed'] \
       and timestamp_data['ending']['start'] + timestamp_data['ending']['end'] == -2:
 
       timestamp_data['ending']['start'] = round(start)
       timestamp_data['ending']['end'] = round(end)
+      if 'chapter_data' not in timestamp_data['sources']:
+        timestamp_data['sources'].append('chapter_data')
 
   if len(indices) == 0:
     series.append(timestamp_data)
