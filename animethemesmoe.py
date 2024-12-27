@@ -110,6 +110,6 @@ def get_themes(name, anidb_id):
 			continue
 		themes = anime['animethemes']
 	
-	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for {name}")
+	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for {name} with ID {anidb_id}")
 	
 	return themes
