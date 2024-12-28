@@ -36,17 +36,17 @@ def main():
 	if args.parsed_args.combine_database:
 		path = args.parsed_args.combine_database
 		if not os.path.exists(path):
-			print(f"[main.py] [ERROR] Could not find file {path}")
+			logprint(f"[main.py] [ERROR] Could not find file {path}")
 			return
 		file = open(path)
 		try:
 			import_db_file = json.load(file)
 		except json.decoder.JSONDecodeError:
-			print("[main.py] [ERROR] Inputted file is not a valid JSON file")
+			logprint("[main.py] [ERROR] Inputted file is not a valid JSON file")
 			return
 		
 		if type(import_db_file) is not dict:
-			print("[main.py] [ERROR] Inputted file is not a JSON dict")
+			logprint("[main.py] [ERROR] Inputted file is not a JSON dict")
 			return
 		
 		for key, value in list(dict.items(import_db_file)):

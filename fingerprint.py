@@ -126,14 +126,15 @@ def fingerprint_episodes(anidb_id, episodes):
 
 		os.remove(episode["mp3_path"])
 
-		logprint(f"[fingerprint.py] [INFO] Opening start: {timestamp_data['opening']['start']}. Ending start: {timestamp_data['ending']['start']}")
+		logprint(f"[fingerprint.py] [INFO] Opening: {timestamp_data['opening']}. Ending: {timestamp_data['ending']}")
 
 		if add_method == 'append':
 			series.append(timestamp_data)
 	
-	local_database_file.seek(0)
-	json.dump(local_database, local_database_file, indent=4)
-	local_database_file.truncate()
+		local_database_file.seek(0)
+		json.dump(local_database, local_database_file, indent=4)
+		local_database_file.truncate()
+	
 	local_database_file.close()
 
 def drop_database_tables():
