@@ -53,7 +53,7 @@ async def find_episodes(anilist_id: str, from_ratelimit=False):
 			if not from_ratelimit:
 				logprint(f"[anime_skip.py] [INFO] Rate limited while requesting show with Anilist ID {anilist_id}. Trying test headers instead")
 
-			time.sleep(2)
+			time.sleep(1)
 			return find_episodes(anilist_id, True)
 	
 	try:

@@ -9,7 +9,6 @@ import anidb
 import anime_offline_database
 import bettervrv
 import kitsu
-import anilist
 import animethemesmoe
 #import animixplay
 #import twistmoe
@@ -17,6 +16,7 @@ import animepahe
 import fingerprint
 import chapters
 import math
+import myanimelist
 from utils import logprint, get_timestamp_template, merge_timestamps
 
 Path("./openings").mkdir(exist_ok=True)
@@ -96,6 +96,7 @@ def main():
 		for anime in anime_titles[start_index:]:
 			anidb_id = str(anime["id"])
 			anilist_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "anilist")
+			mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
 			
 			if not anilist_id:
 				continue
@@ -135,13 +136,14 @@ def main():
 						series.append(timestamp_data)
 					
 			# BetterVRV
-			series_info = anilist.get_series_info(anilist_id)
-			episode_count = anilist.get_episode_count(anilist_id)
-			if series_info['first_entry'] == anilist_id:
+			mal_info = myanimelist.get_anime_info(mal_id)
+			series_data = myanimelist.get_series_data(mal_info)
+
+			if series_data['start_id'] == mal_id:
 				titles = anime["titles"]
 			else:
-				first_anidb_id = anime_offline_database.convert_anime_id(series_info['first_entry'], "anilist", "anidb")
-				found_anime = [a for a in anime_titles if a['id'] == first_anidb_id]
+				start_anidb_id = anime_offline_database.convert_anime_id(series_data['start_id'], "myanimelist", "anidb")
+				found_anime = [a for a in anime_titles if a['id'] == start_anidb_id]
 				if len(found_anime) == 0:
 					titles = []
 				else:
@@ -149,7 +151,7 @@ def main():
 			
 			bvrv_episodes = None
 			for title in [t for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
-				bvrv_episodes = bettervrv.find_episodes(title, series_info['season'], episode_count)
+				bvrv_episodes = bettervrv.find_episodes(title, series_data['current_season'], mal_info['num_episodes'])
 				if bvrv_episodes:
 					break
 			
@@ -161,7 +163,7 @@ def main():
 							continue
 					
 					try:
-						episode_number = int(episode["episodeNumber"] - series_info['episodes_before'])
+						episode_number = int(episode["episodeNumber"] - series_data['previous_episode_count'])
 					except Exception:
 						logprint(f"[main.py] [WARNING] Got invalid episode number {episode['episodeNumber']}")
 						continue
