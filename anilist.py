@@ -1,12 +1,25 @@
 import time
+from math import ceil
 from python_graphql_client import GraphqlClient
 
 from utils import logprint
 
+REQUESTS_PER_SECOND = 30
+SECONDS_BETWEEN_REQUESTS = ceil(60/REQUESTS_PER_SECOND)
+
 # Instantiate the client with an endpoint.
 client = GraphqlClient(endpoint="https://graphql.anilist.co")
 
+global last_request
+last_request = 0
+
 def get_episode_count(id: int):
+	global last_request
+	between_requests = time.time() - last_request
+	if between_requests < SECONDS_BETWEEN_REQUESTS:
+		time.sleep(SECONDS_BETWEEN_REQUESTS - between_requests)
+		return get_episode_count(id)
+
 	query = """
 		query GetAnimeInfo($id: Int!) {
 			Media(id: $id) {
@@ -19,10 +32,12 @@ def get_episode_count(id: int):
 		data = client.execute(query=query, variables={ "id": id })
 	except Exception:
 		# If killed, just wait a second
-		logprint(f"[anilist.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in one second")
+		logprint(f"[anilist.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in two seconds")
 
-		time.sleep(1)
+		time.sleep(2)
 		return get_episode_count(id)
+	
+	last_request = time.time()
 	
 	try:
 		return data["data"]["Media"]["episodes"]
@@ -30,6 +45,12 @@ def get_episode_count(id: int):
 		return None
 
 def get_relations(id: int):
+	global last_request
+	between_requests = time.time() - last_request
+	if between_requests < SECONDS_BETWEEN_REQUESTS:
+		time.sleep(SECONDS_BETWEEN_REQUESTS - between_requests)
+		return get_relations(id)
+
 	query = """
 		query FindRelations($id: Int!) {
 			Media(id: $id) {
@@ -38,7 +59,7 @@ def get_relations(id: int):
             relationType
             node {
               id
-							episodes
+			  episodes
             }
           }
         }
@@ -48,12 +69,15 @@ def get_relations(id: int):
 
 	try:
 		data = client.execute(query=query, variables={ "id": id })
-	except Exception:
+	except Exception as e:
+		logprint(e)
 		# If killed, just wait a second
-		logprint(f"[anilist.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in one second")
+		logprint(f"[anilist.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in two seconds")
 
-		time.sleep(1)
+		time.sleep(2)
 		return get_relations(id)
+	
+	last_request = time.time()
 	
 	try:
 		return data["data"]["Media"]["relations"]["edges"]

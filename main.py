@@ -91,7 +91,7 @@ def main():
 		if args.parsed_args.aggregation_start != None:
 			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.aggregation_start), 0)
 		
-		logprint(f"[main.py] [INFO] Finding timestamps using anime-skip")
+		logprint(f"[main.py] [INFO] Finding timestamps from anime-skip and bettervrv")
 
 		for anime in anime_titles[start_index:]:
 			anidb_id = str(anime["id"])

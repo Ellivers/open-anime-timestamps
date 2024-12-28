@@ -14,7 +14,12 @@ TEST_HEADERS = {
 # Instantiate the client with an endpoint.
 client = GraphqlClient(endpoint="http://api.anime-skip.com/graphql")
 
-def find_episodes(anilist_id: str, headers=STANDARD_HEADERS):
+async def find_episodes(anilist_id: str, from_ratelimit=False):
+	if from_ratelimit:
+		headers = TEST_HEADERS
+	else:
+		headers = STANDARD_HEADERS
+
 	query = """
 		query FindShowsByExternalID($id: String!) {
 			findShowsByExternalId(service: ANILIST serviceId: $id) {
@@ -33,7 +38,7 @@ def find_episodes(anilist_id: str, headers=STANDARD_HEADERS):
 		logprint(f"[anime_skip.py] [WARNING] Error while requesting show with Anilist ID {anilist_id}. Trying again in one second")
 
 		time.sleep(1)
-		return find_episodes(anilist_id)
+		return find_episodes(anilist_id, from_ratelimit)
 	
 	if "errors" in data:
 		ratelimit = False
@@ -45,10 +50,11 @@ def find_episodes(anilist_id: str, headers=STANDARD_HEADERS):
 
 		if ratelimit:
 			# If rate limited, try using the api test headers instead
-			logprint(f"[anime_skip.py] [INFO] Rate limited while requesting show with Anilist ID {anilist_id}. Trying test headers instead")
+			if not from_ratelimit:
+				logprint(f"[anime_skip.py] [INFO] Rate limited while requesting show with Anilist ID {anilist_id}. Trying test headers instead")
 
 			time.sleep(2)
-			return find_episodes(anilist_id, TEST_HEADERS)
+			return find_episodes(anilist_id, True)
 	
 	try:
 		return data["data"]["findShowsByExternalId"][0]["episodes"]
