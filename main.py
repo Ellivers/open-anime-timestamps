@@ -7,7 +7,9 @@ import re
 import anime_skip
 import anidb
 import anime_offline_database
+import bettervrv
 import kitsu
+import anilist
 import animethemesmoe
 #import animixplay
 #import twistmoe
@@ -98,70 +100,75 @@ def main():
 			if not anilist_id:
 				continue
 
-			episodes = anime_skip.find_episodes_by_external_id(str(anilist_id))
+			# Anime-skip
+			as_episodes = anime_skip.find_episodes(str(anilist_id))
 
 			if anidb_id not in local_database:
 				local_database[anidb_id] = []
 
 			series = local_database[anidb_id]
 
-			if episodes is None or len(series) == len(episodes):
-				continue
-
-			logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
-			
-			for episode in episodes:
-				if episode["number"] is None:
-						continue
-				if len(episode['timestamps']) == 0:
-						continue
+			if as_episodes and len(series) != len(as_episodes):
+				logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
 				
-				try:
-					episode_number = float(episode["number"])
-				except Exception:
-					logprint(f"[main.py] [WARNING] Got invalid episode number {episode['number']}")
-					continue
-				
-				if not any(e['episode_number'] == episode_number for e in series):
-					#bettervrv_episode_timestamps = bettervrv.find_episode_by_name(episode["attributes"]["canonicalTitle"])
+				for episode in as_episodes:
+					if not episode["number"]:
+							continue
+					if len(episode['timestamps']) == 0:
+							continue
 					
+					try:
+						episode_number = float(episode["number"])
+					except Exception:
+						logprint(f"[main.py] [WARNING] Got invalid episode number {episode['number']}")
+						continue
+
 					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"], episode_number)
-
-					"""
-					elif bettervrv_episode_timestamps:
-						timestamp_data["source"] = "bettervrv"
-
-						if "introStart" in bettervrv_episode_timestamps:
-							timestamp_data["opening"]["start"] = int(bettervrv_episode_timestamps["introStart"])
-
-							if "introEnd" in bettervrv_episode_timestamps:
-								timestamp_data["opening"]["end"] = int(bettervrv_episode_timestamps["introEnd"])
-
-						if "outroStart" in bettervrv_episode_timestamps:
-							timestamp_data["ending"]["start"] = int(bettervrv_episode_timestamps["outroStart"])
-							
-							if "outroEnd" in bettervrv_episode_timestamps:
-								timestamp_data["ending"]["end"] = int(bettervrv_episode_timestamps["outroEnd"])
-
-						if "previewStart" in bettervrv_episode_timestamps:
-							timestamp_data["preview_start"] = int(bettervrv_episode_timestamps["previewStart"])
-
-						# BetterVRV also has a "postSceneEnd" timestamp, not sure what it does though. Not tracked
-					"""
 
 					if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1 and timestamp_data["preview_start"] == -1:
 						continue
 
-					"""
-					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == timestamp_data["episode_number"]]
+					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == episode_number]
 					if len(existing_indices) > 0:
-						if len(existing_indices) > 1:
-							logprint(f"[main.py] [WARNING] Anime with ID {anidb_id} has duplicates of episode {timestamp_data['episode_number']}")
-						series[existing_indices[0]] = timestamp_data
+						series[existing_indices[0]] = merge_timestamps(timestamp_data, series[existing_indices[0]])
 					else:
 						series.append(timestamp_data)
-					"""
-					series.append(timestamp_data)
+					
+			# BetterVRV
+			series_info = anilist.get_series_info(anilist_id)
+			episode_count = anilist.get_episode_count(anilist_id)
+			if series_info['first_entry'] == anilist_id:
+				titles = anime["titles"]
+			else:
+				first_anidb_id = anime_offline_database.convert_anime_id(series_info['first_entry'], "anilist", "anidb")
+				found_anime = [a for a in anime_titles if a['id'] == first_anidb_id]
+				if len(found_anime) == 0:
+					titles = []
+				else:
+					titles = found_anime[0]["titles"]
+			
+			episodes = []
+			for title in [t for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
+				episodes = bettervrv.find_episodes(title, series_info['season'], episode_count)
+				if len(episodes) > 0:
+					break
+			
+			if len(episodes) > 0:
+				logprint(f"[main.py] [INFO] Found bettervrv timestamps for series with ID {anidb_id}")
+
+				for episode in episodes:
+					if not episode["episodeNumber"]:
+							continue
+					
+					try:
+						episode_number = int(episode["episodeNumber"] - series_info['episodes_before'])
+					except Exception:
+						logprint(f"[main.py] [WARNING] Got invalid episode number {episode['episodeNumber']}")
+						continue
+
+					bettervrv.parse_timestamps(episode, float(episode_number))
+					# More here
+
 
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)
