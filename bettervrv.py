@@ -78,7 +78,7 @@ def find_episodes(name, season, episode_count):
 	try:
 		return response.json()["results"]
 	except Exception:
-		return []
+		return None
 
 def parse_timestamps(data: dict, episode_number: float) -> dict:
 	timestamp_data = get_timestamp_template(episode_number, "better_vrv")

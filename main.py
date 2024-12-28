@@ -100,15 +100,15 @@ def main():
 			if not anilist_id:
 				continue
 
-			# Anime-skip
-			as_episodes = anime_skip.find_episodes(str(anilist_id))
-
 			if anidb_id not in local_database:
 				local_database[anidb_id] = []
 
 			series = local_database[anidb_id]
 
-			if as_episodes and len(series) != len(as_episodes):
+			# Anime-skip
+			as_episodes = anime_skip.find_episodes(str(anilist_id))
+
+			if as_episodes:
 				logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
 				
 				for episode in as_episodes:
@@ -147,16 +147,16 @@ def main():
 				else:
 					titles = found_anime[0]["titles"]
 			
-			episodes = []
+			bvrv_episodes = None
 			for title in [t for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
-				episodes = bettervrv.find_episodes(title, series_info['season'], episode_count)
-				if len(episodes) > 0:
+				bvrv_episodes = bettervrv.find_episodes(title, series_info['season'], episode_count)
+				if bvrv_episodes:
 					break
 			
-			if len(episodes) > 0:
+			if bvrv_episodes:
 				logprint(f"[main.py] [INFO] Found bettervrv timestamps for series with ID {anidb_id}")
 
-				for episode in episodes:
+				for episode in bvrv_episodes:
 					if not episode["episodeNumber"]:
 							continue
 					
@@ -166,9 +166,16 @@ def main():
 						logprint(f"[main.py] [WARNING] Got invalid episode number {episode['episodeNumber']}")
 						continue
 
-					bettervrv.parse_timestamps(episode, float(episode_number))
-					# More here
+					timestamp_data = bettervrv.parse_timestamps(episode, float(episode_number))
+					
+					if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1 and timestamp_data["preview_start"] == -1:
+						continue
 
+					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == episode_number]
+					if len(existing_indices) > 0:
+						series[existing_indices[0]] = merge_timestamps(timestamp_data, series[existing_indices[0]])
+					else:
+						series.append(timestamp_data)
 
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)

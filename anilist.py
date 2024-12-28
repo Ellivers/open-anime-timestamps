@@ -19,7 +19,7 @@ def get_episode_count(id: int):
 		data = client.execute(query=query, variables={ "id": id })
 	except Exception:
 		# If killed, just wait a second
-		logprint(f"[anime_skip.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in one second")
+		logprint(f"[anilist.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in one second")
 
 		time.sleep(1)
 		return get_episode_count(id)
@@ -50,7 +50,7 @@ def get_relations(id: int):
 		data = client.execute(query=query, variables={ "id": id })
 	except Exception:
 		# If killed, just wait a second
-		logprint(f"[anime_skip.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in one second")
+		logprint(f"[anilist.py] [WARNING] Error while requesting show with Anilist ID {id}. Trying again in one second")
 
 		time.sleep(1)
 		return get_relations(id)
