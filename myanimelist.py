@@ -1,5 +1,7 @@
 import requests
 
+from utils import logprint
+
 API_PATH = "https://api.myanimelist.net/v2"
 
 HEADERS = {
@@ -7,13 +9,16 @@ HEADERS = {
 }
 
 def get_anime_info(id: int):
-  req = requests.get(f"{API_PATH}/anime/{id}?fields=num_episodes,related_anime", headers=HEADERS)
-  return req.json()
+	req = requests.get(f"{API_PATH}/anime/{id}?fields=num_episodes,related_anime", headers=HEADERS)
+	if req.status_code != 200:
+		logprint(f"[myanimelist.py] [WARNING] Failed getting info for anime with MAL ID {id} (response code {req.status_code})")
+		return
+	return req.json()
 
 def get_related_anime_info(info: dict, relation_type: str):
 	for rel in info['related_anime']:
 		if rel['relation_type'] == relation_type.lower():
-			return get_anime_info(rel['id'])
+			return get_anime_info(rel['node']['id'])
 
 def get_series_data(info: dict, season_count=1, previous_episode_count=0):
 	prequel = get_related_anime_info(info, 'prequel')

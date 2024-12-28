@@ -14,7 +14,7 @@ TEST_HEADERS = {
 # Instantiate the client with an endpoint.
 client = GraphqlClient(endpoint="http://api.anime-skip.com/graphql")
 
-async def find_episodes(anilist_id: str, from_ratelimit=False):
+def find_episodes(anilist_id: str, from_ratelimit=False):
 	if from_ratelimit:
 		headers = TEST_HEADERS
 	else:

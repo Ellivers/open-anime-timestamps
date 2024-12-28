@@ -97,9 +97,6 @@ def main():
 			anidb_id = str(anime["id"])
 			anilist_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "anilist")
 			mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
-			
-			if not anilist_id:
-				continue
 
 			if anidb_id not in local_database:
 				local_database[anidb_id] = []
@@ -135,8 +132,18 @@ def main():
 					else:
 						series.append(timestamp_data)
 					
+					local_database_file.seek(0)
+					json.dump(local_database, local_database_file, indent=4)
+					local_database_file.truncate()
+			
+			# OK to return here because no more sources are after bettervrv
+			if not mal_id:
+				continue
+
 			# BetterVRV
 			mal_info = myanimelist.get_anime_info(mal_id)
+			if not mal_info:
+				continue
 			series_data = myanimelist.get_series_data(mal_info)
 
 			if series_data['start_id'] == mal_id:
@@ -150,7 +157,7 @@ def main():
 					titles = found_anime[0]["titles"]
 			
 			bvrv_episodes = None
-			for title in [t for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
+			for title in [t['title'] for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
 				bvrv_episodes = bettervrv.find_episodes(title, series_data['current_season'], mal_info['num_episodes'])
 				if bvrv_episodes:
 					break
@@ -179,9 +186,9 @@ def main():
 					else:
 						series.append(timestamp_data)
 
-			local_database_file.seek(0)
-			json.dump(local_database, local_database_file, indent=4)
-			local_database_file.truncate()
+					local_database_file.seek(0)
+					json.dump(local_database, local_database_file, indent=4)
+					local_database_file.truncate()
 
 	local_database_file.close()
 
