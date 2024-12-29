@@ -1,5 +1,4 @@
 import requests
-import time
 
 from utils import logprint
 
@@ -9,17 +8,16 @@ HEADERS = {
   "X-MAL-CLIENT-ID": "347bf7170686781dae25d5c2e60f9a64"
 }
 
-def get_anime_info(id: int, retry=False):
+def get_anime_info(id: int):
 	req = requests.get(f"{API_PATH}/anime/{id}?fields=num_episodes,related_anime", headers=HEADERS)
 	status_code = req.status_code
 	if status_code != 200:
-		logprint(f"[myanimelist.py] [WARNING] Failed getting info for anime with MAL ID {id} (response code {status_code})")
 		if status_code == 504:
-			if not retry:
-				# If timed out, just wait a second... or 115
-				time.sleep(115)
-			logprint('Retrying')
-			return get_anime_info(id, retry=True)
+			logprint(f"[myanimelist.py] [WARNING] Failed to get info for anime with MAL ID {id} (response code {status_code}). Retrying")
+			return get_anime_info(id)
+		else:
+			logprint(f"[myanimelist.py] [WARNING] Failed to get info for anime with MAL ID {id} (response code {status_code}). Skipping")
+			return
 	return req.json()
 
 def get_related_anime_info(info: dict, relation_type: str):
