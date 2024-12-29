@@ -63,7 +63,7 @@ def find_episodes(anilist_id: str, from_ratelimit=False):
 
 def parse_timestamps(timestamps: list, episode_number: float):
 	# Timestamp list passed from main.py is never empty
-	timestamp_data = get_timestamp_template(episode_number, str(timestamps[0]["source"]).lower())
+	timestamp_data = get_timestamp_template(episode_number)
 
 	# anime-skip has a lot of timestamp types, most of which don't make sense to me
 	# only taking a subset of them
@@ -72,6 +72,9 @@ def parse_timestamps(timestamps: list, episode_number: float):
 	ongoing_type = None
 
 	for timestamp in timestamps:
+		source = str(timestamp['source']).lower()
+		if source not in timestamp_data['sources']:
+			timestamp_data['sources'].append(source)
 
 		timestamp_name = timestamp["type"]["name"]
 		if timestamp_name not in ["Canon","Unknown","Recap","Intro","New Intro","Credits","New Credits","Preview"]:
