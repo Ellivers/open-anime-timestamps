@@ -15,8 +15,8 @@ def get_anime_info(id: int):
 	if status_code != 200:
 		logprint(f"[myanimelist.py] [WARNING] Failed getting info for anime with MAL ID {id} (response code {status_code})")
 		if status_code == 504:
-			# If timed out, just wait a second... or 100
-			time.sleep(100)
+			# If timed out, just wait a second... or 110
+			time.sleep(110)
 			logprint('Retrying')
 			return get_anime_info(id)
 	return req.json()
