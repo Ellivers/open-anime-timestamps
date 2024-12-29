@@ -141,10 +141,10 @@ def main():
 				continue
 
 			# BetterVRV
-			mal_info = myanimelist.get_anime_info(mal_id)
-			if not mal_info:
+			anime_info = myanimelist.get_anime_info(mal_id)
+			if not anime_info:
 				continue
-			series_data = myanimelist.get_series_data(mal_info)
+			series_data = myanimelist.get_series_data(anime_info)
 
 			if series_data['start_id'] == mal_id:
 				titles = anime["titles"]
@@ -157,20 +157,22 @@ def main():
 					titles = found_anime[0]["titles"]
 			
 			bvrv_episodes = None
-			if mal_info['num_episodes']:
-				episode_count = mal_info['num_episodes']
+			episode_count = None
+			if anime_info['num_episodes']:
+				episode_count = anime_info['num_episodes']
 			else:
 				kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 				kitsu_details = kitsu.details(kitsu_id)
-				keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
-				if keys_exist:
-					total_length = kitsu_details['data']['attributes']['totalLength']
-					episode_length = kitsu_details['data']['attributes']['episodeLength']
-				if 'data' in kitsu_details and keys_exist and bool(total_length and episode_length):
-					episode_count = int(total_length / episode_length)
-				else:
-					logprint(f"[main.py] [WARNING] Could not get episode count of anime with ID {anidb_id}. Assuming 9999")
-					episode_count = 9999
+				if kitsu_details['data']:
+					keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
+					if keys_exist:
+						total_length = kitsu_details['data']['attributes']['totalLength']
+						episode_length = kitsu_details['data']['attributes']['episodeLength']
+					if 'data' in kitsu_details and keys_exist and bool(total_length and episode_length):
+						episode_count = int(total_length / episode_length)
+			if not episode_count:
+				logprint(f"[main.py] [WARNING] Could not get episode count of anime with ID {anidb_id}. Assuming 9999")
+				episode_count = 9999
 			for title in [t['title'] for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
 				bvrv_episodes = bettervrv.find_episodes(title, series_data['current_season'], episode_count)
 				if bvrv_episodes:
