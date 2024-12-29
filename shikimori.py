@@ -64,7 +64,7 @@ def get_series_data(info: dict, season_count=1, previous_episode_count=0):
 	prequel = get_related_anime_info(info, 'prequel')
 	if prequel:
 		season_count += 1
-		previous_episode_count += (info['episodesAired'] or info['episodes'])
+		previous_episode_count += (prequel['episodesAired'] or prequel['episodes'])
 		return get_series_data(prequel, season_count, previous_episode_count)
 	else:
 		return {

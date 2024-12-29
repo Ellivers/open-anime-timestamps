@@ -63,6 +63,9 @@ def main():
 				episode_number = ep.get('episode_number')
 				if not episode_number:
 					continue
+				if episode_number < 0:
+					logprint(f"[main.py] [WARNING] Skipping episode with invalid number {episode_number}")
+					continue
 				indices = [i for i in range(len(series)) if float(series[i]['episode_number']) == float(episode_number)]
 				if len(indices) == 0:
 					series.append(merge_timestamps(ep, get_timestamp_template(episode_number)))
@@ -103,10 +106,30 @@ def main():
 
 			series = local_database[anidb_id]
 
+			anime_info = myanimelist.get_anime_info(mal_id)
+
+			episode_count = None
+			if anime_info and anime_info['num_episodes']:
+				episode_count = anime_info['num_episodes']
+			else:
+				kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
+				kitsu_details = kitsu.details(kitsu_id)
+				if 'data' in kitsu_details:
+					keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
+					if keys_exist:
+						total_length = kitsu_details['data']['attributes']['totalLength']
+						episode_length = kitsu_details['data']['attributes']['episodeLength']
+					if 'data' in kitsu_details and keys_exist and bool(total_length and episode_length):
+						episode_count = int(total_length / episode_length)
+			if not episode_count:
+				episode_count = 9999
+				logprint(f"[main.py] [WARNING] Could not get episode count of anime with ID {anidb_id}. Assuming {episode_count}")
+
 			# Anime-skip
 			as_episodes = anime_skip.find_episodes(str(anilist_id))
 
 			if as_episodes:
+				actual_series = series
 				logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
 				
 				for episode in as_episodes:
@@ -121,29 +144,38 @@ def main():
 						logprint(f"[main.py] [WARNING] Got invalid episode number {episode['number']}")
 						continue
 
+					if episode_number > episode_count and anime_info:
+						# Check which series this episode belongs to
+						actual_anime = myanimelist.get_anime_from_episode_num(anime_info, episode_number)
+						actual_anidb_id = anime_offline_database.convert_anime_id(actual_anime['id'], "myanimelist", "anidb")
+						if actual_anidb_id:
+							actual_anidb_id = str(actual_anidb_id)
+							if actual_anidb_id not in local_database:
+								local_database[actual_anidb_id] = []
+							actual_series = local_database[actual_anidb_id]
+							episode_number = float(actual_anime['episode_num'])
+
 					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"], episode_number)
 
 					if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1 and timestamp_data["preview_start"] == -1:
 						continue
 
-					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == episode_number]
+					existing_indices = [i for i in range(len(actual_series)) if actual_series[i]["episode_number"] == episode_number]
 					if len(existing_indices) > 0:
-						series[existing_indices[0]] = merge_timestamps(timestamp_data, series[existing_indices[0]])
+						actual_series[existing_indices[0]] = merge_timestamps(timestamp_data, actual_series[existing_indices[0]])
 					else:
-						series.append(timestamp_data)
+						actual_series.append(timestamp_data)
 					
 				local_database_file.seek(0)
 				json.dump(local_database, local_database_file, indent=4)
 				local_database_file.truncate()
 			
-			# OK to return here because no more sources are after bettervrv
-			if not mal_id:
-				continue
-
 			# BetterVRV
-			anime_info = myanimelist.get_anime_info(mal_id)
+
+			# OK to use 'continue' here because no more sources are after BetterVRV
 			if not anime_info:
 				continue
+
 			series_data = myanimelist.get_series_data(anime_info)
 
 			if series_data['start_id'] == mal_id:
@@ -152,27 +184,11 @@ def main():
 				start_anidb_id = anime_offline_database.convert_anime_id(series_data['start_id'], "myanimelist", "anidb")
 				found_anime = [a for a in anime_titles if a['id'] == start_anidb_id]
 				if len(found_anime) == 0:
-					titles = []
+					continue
 				else:
 					titles = found_anime[0]["titles"]
 			
 			bvrv_episodes = None
-			episode_count = None
-			if anime_info['num_episodes']:
-				episode_count = anime_info['num_episodes']
-			else:
-				kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
-				kitsu_details = kitsu.details(kitsu_id)
-				if 'data' in kitsu_details:
-					keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
-					if keys_exist:
-						total_length = kitsu_details['data']['attributes']['totalLength']
-						episode_length = kitsu_details['data']['attributes']['episodeLength']
-					if 'data' in kitsu_details and keys_exist and bool(total_length and episode_length):
-						episode_count = int(total_length / episode_length)
-			if not episode_count:
-				logprint(f"[main.py] [WARNING] Could not get episode count of anime with ID {anidb_id}. Assuming 9999")
-				episode_count = 9999
 			for title in [t['title'] for t in titles if t['language'] in ['x-jat','en'] and t['type'] in ['main','official']]:
 				bvrv_episodes = bettervrv.find_episodes(title, series_data['current_season'], episode_count)
 				if bvrv_episodes:
@@ -205,6 +221,8 @@ def main():
 				local_database_file.seek(0)
 				json.dump(local_database, local_database_file, indent=4)
 				local_database_file.truncate()
+			
+		myanimelist.empty_anime_info_cache()
 
 	local_database_file.close()
 
