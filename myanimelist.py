@@ -1,4 +1,5 @@
 import requests
+import time
 
 from utils import logprint
 
@@ -10,9 +11,14 @@ HEADERS = {
 
 def get_anime_info(id: int):
 	req = requests.get(f"{API_PATH}/anime/{id}?fields=num_episodes,related_anime", headers=HEADERS)
-	if req.status_code != 200:
-		logprint(f"[myanimelist.py] [WARNING] Failed getting info for anime with MAL ID {id} (response code {req.status_code})")
-		return
+	status_code = req.status_code
+	if status_code != 200:
+		logprint(f"[myanimelist.py] [WARNING] Failed getting info for anime with MAL ID {id} (response code {status_code})")
+		if status_code == 504:
+			# If timed out, just wait a second... or 100
+			time.sleep(100)
+			logprint('Retrying')
+			return get_anime_info(id)
 	return req.json()
 
 def get_related_anime_info(info: dict, relation_type: str):
@@ -24,7 +30,8 @@ def get_series_data(info: dict, season_count=1, previous_episode_count=0):
 	prequel = get_related_anime_info(info, 'prequel')
 	if prequel:
 		season_count += 1
-		previous_episode_count += info['num_episodes']
+		if info['num_episodes']: # Episode count is null for ongoing anime
+			previous_episode_count += info['num_episodes']
 		return get_series_data(prequel, season_count, previous_episode_count)
 	else:
 		return {
