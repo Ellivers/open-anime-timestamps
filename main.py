@@ -163,7 +163,7 @@ def main():
 			else:
 				kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 				kitsu_details = kitsu.details(kitsu_id)
-				if kitsu_details['data']:
+				if 'data' in kitsu_details:
 					keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
 					if keys_exist:
 						total_length = kitsu_details['data']['attributes']['totalLength']
