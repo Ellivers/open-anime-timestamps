@@ -165,6 +165,10 @@ def main():
 							actual_series = local_database[actual_anidb_id]
 							episode_number = float(actual_anime['episode_num'])
 							logprint(f"[main.py] [INFO] Found anime-skip timestamps for series {actual_anidb_id} within timestamps for series {anidb_id}")
+					
+					if episode_number < 0:
+						logprint(f"[main.py] [WARNING] Got negative episode number {episode_number}. Skipping episode")
+						continue
 
 					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"], episode_number)
 
@@ -213,9 +217,16 @@ def main():
 							continue
 					
 					try:
-						episode_number = int(episode["episodeNumber"] - series_data['previous_episode_count'])
+						episode_number = float(episode["episodeNumber"])
 					except Exception:
 						logprint(f"[main.py] [WARNING] Got invalid episode number {episode['episodeNumber']}")
+						continue
+
+					if series_data['previous_episode_count'] > 0 and int(episode_number) > series_data['previous_episode_count']:
+						episode_number = int(episode_number - series_data['previous_episode_count'])
+
+					if episode_number < 0:
+						logprint(f"[main.py] [WARNING] Got negative episode number {episode_number}. Skipping episode")
 						continue
 
 					timestamp_data = bettervrv.parse_timestamps(episode, float(episode_number))
@@ -223,7 +234,7 @@ def main():
 					if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1 and timestamp_data["preview_start"] == -1:
 						continue
 
-					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == episode_number]
+					existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == float(episode_number)]
 					if len(existing_indices) > 0:
 						series[existing_indices[0]] = merge_timestamps(timestamp_data, series[existing_indices[0]])
 					else:
