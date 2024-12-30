@@ -106,7 +106,10 @@ def main():
 
 			series = local_database[anidb_id]
 
-			anime_info = myanimelist.get_anime_info(mal_id)
+			if mal_id:
+				anime_info = myanimelist.get_anime_info(mal_id)
+			else:
+				anime_info = None
 
 			episode_count = None
 			if anime_info and anime_info['num_episodes']:
