@@ -30,14 +30,14 @@ def get_timestamp_template(episode_number, source=None):
   return data
 
 def merge_timestamps(merge_from: dict, merge_to: dict) -> dict: # Supports old database format for 'merge_from'
-	handle_merge(merge_from, merge_to, ('recap','start'), depth=2)
-	handle_merge(merge_from, merge_to, ('recap','end'), depth=2)
-	handle_merge(merge_from, merge_to, ('opening','start'), depth=2)
-	handle_merge(merge_from, merge_to, ('opening','end'), depth=2)
-	handle_merge(merge_from, merge_to, ('ending','start'), depth=2)
-	handle_merge(merge_from, merge_to, ('ending','end'), depth=2)
+	handle_merge(merge_from, merge_to, ['recap','start'])
+	handle_merge(merge_from, merge_to, ['recap','end'])
+	handle_merge(merge_from, merge_to, ['opening','start'])
+	handle_merge(merge_from, merge_to, ['opening','end'])
+	handle_merge(merge_from, merge_to, ['ending','start'])
+	handle_merge(merge_from, merge_to, ['ending','end'])
      
-	handle_merge(merge_from, merge_to, ('preview_start'))
+	handle_merge(merge_from, merge_to, ['preview_start'])
   
 	if 'sources' in merge_from:
 		for src in merge_from['sources']:
@@ -59,7 +59,8 @@ def merge_timestamps(merge_from: dict, merge_to: dict) -> dict: # Supports old d
 	
 	return merge_to
 	
-def handle_merge(f: dict, t: dict, keys: tuple[str], depth=1):
+def handle_merge(f: dict, t: dict, keys: list[str]):
+	depth = len(keys)
 	if depth == 1 and f.get(keys[0]) != None and t[keys[0]] == -1:
 		t[keys[0]] = f[keys[0]]
 		return
