@@ -81,6 +81,9 @@ def parse_timestamps(timestamps: list, episode_number: float):
 			continue
 
 		timestamp_time = int(float(timestamp["at"]))
+		if timestamp_time < 0:
+			logprint(f"[anime_skip.py] [WARNING] Found invalid timestamp {timestamp_time} in episode {episode_number}. Skipping episode")
+			return get_timestamp_template(episode_number)
 
 		# Set start times
 		if timestamp_name in ["Intro","New Intro"]:

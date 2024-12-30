@@ -66,6 +66,14 @@ def main():
 				if episode_number < 0:
 					logprint(f"[main.py] [WARNING] Skipping episode with invalid number {episode_number}")
 					continue
+
+				if 'recap' in ep and ep['recap'].get('end',-1) != -1 and ep['recap'].get('start',-1) == -1:
+					ep['recap']['start'] = 0
+				if 'opening' in ep and ep['opening'].get('end',-1) != -1 and ep['opening'].get('start',-1) == -1:
+					ep['opening']['start'] = 0
+				if 'ending' in ep and ep['ending'].get('end',-1) != -1 and ep['ending'].get('start',-1) == -1:
+					ep['ending']['start'] = 0
+
 				indices = [i for i in range(len(series)) if float(series[i]['episode_number']) == float(episode_number)]
 				if len(indices) == 0:
 					series.append(merge_timestamps(ep, get_timestamp_template(episode_number)))

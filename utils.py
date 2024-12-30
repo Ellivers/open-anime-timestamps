@@ -9,7 +9,7 @@ def logprint(message: str, ignore_silent=False):
 
 def get_timestamp_template(episode_number, source=None):
   data = {
-		"episode_number": episode_number,
+		"episode_number": float(episode_number),
 		"recap": {
 			"start": -1,
 			"end": -1
@@ -55,12 +55,14 @@ def merge_timestamps(merge_from: dict, merge_to: dict) -> dict: # Supports old d
 	if 'source' in merge_from and merge_from['source'] not in merge_to['sources']:
 		merge_to['sources'].append(merge_from['source'])
 	
+	merge_to['episode_number'] = float(merge_to['episode_number'])
+	
 	return merge_to
 	
 def handle_merge(f: dict, t: dict, keys: tuple[str], depth=1):
-	if depth == 1 and f.get(keys[0]) and t[keys[0]] == -1:
+	if depth == 1 and f.get(keys[0]) != None and t[keys[0]] == -1:
 		t[keys[0]] = f[keys[0]]
 		return
-	if depth == 2 and f.get(keys[0],{}).get(keys[1]) and t[keys[0]][keys[1]] == -1:
+	if depth == 2 and f.get(keys[0],{}).get(keys[1]) != None and t[keys[0]][keys[1]] == -1:
 		t[keys[0]][keys[1]] = f[keys[0]][keys[1]]
 		return
