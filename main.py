@@ -33,7 +33,7 @@ def main():
 			f.close()
 
 	local_database_file = open("timestamps.json", "r+")
-	local_database = json.load(local_database_file)
+	local_database: dict = json.load(local_database_file)
 
 	if args.parsed_args.combine_database:
 		path = args.parsed_args.combine_database
@@ -73,7 +73,7 @@ def main():
 					series[indices[0]] = merge_timestamps(ep, series[indices[0]])
 		
 		local_database_file.seek(0)
-		json.dump(local_database, local_database_file, indent=4)
+		json.dump(dict(sorted(local_database.items())), local_database_file, indent=4)
 		local_database_file.truncate()
 		local_database_file.close()
 
