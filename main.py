@@ -126,7 +126,6 @@ def main():
 						episode_count = int(total_length / episode_length)
 			if not episode_count:
 				episode_count = 9999
-				logprint(f"[main.py] [WARNING] Could not get episode count of anime with ID {anidb_id}. Assuming {episode_count}")
 
 			# Anime-skip
 			as_episodes = anime_skip.find_episodes(str(anilist_id))
