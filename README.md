@@ -167,4 +167,4 @@ The "database" right now is just a plain json file. Each key is the AniDB ID for
 - [ ] Add more sources for episodes? gogoanime might be viable
 - [ ] Better comments
 - [ ] Clean up the code
-- [ ] Re-add BetterVRV support
+- [x] Re-add BetterVRV support

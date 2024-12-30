@@ -72,3 +72,20 @@ def get_series_data(info: dict, season_count=1, previous_episode_count=0):
 			"previous_episode_count": previous_episode_count,
 			"start_id": int(info['malId'])
 		}
+
+def get_anime_from_episode_num(info: dict, episode_num: float) -> dict:
+	sequel = get_related_anime_info(info, 'sequel')
+	num_episodes = (info['episodesAired'] or info['episodes'])
+	if sequel and num_episodes:
+		episode_num -= num_episodes
+		if episode_num <= num_episodes:
+			return {
+				'id': sequel['malId'],
+				'episode_num': episode_num
+			}
+		return get_anime_from_episode_num(sequel, episode_num)
+	else:
+		return {
+				'id': info['malId'],
+				'episode_num': episode_num
+			}
