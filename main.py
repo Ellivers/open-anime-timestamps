@@ -157,6 +157,7 @@ def main():
 								local_database[actual_anidb_id] = []
 							actual_series = local_database[actual_anidb_id]
 							episode_number = float(actual_anime['episode_num'])
+							logprint(f"[main.py] [INFO] Found anime-skip timestamps for series {actual_anidb_id} within timestamps for series {anidb_id}")
 
 					timestamp_data = anime_skip.parse_timestamps(episode["timestamps"], episode_number)
 
