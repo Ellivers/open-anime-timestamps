@@ -73,7 +73,7 @@ def main():
 					series[indices[0]] = merge_timestamps(ep, series[indices[0]])
 		
 		local_database_file.seek(0)
-		json.dump(dict(sorted(local_database.items())), local_database_file, indent=4)
+		json.dump(dict(sorted(local_database.items(), key=lambda pair: int(pair[0]))), local_database_file, indent=4)
 		local_database_file.truncate()
 		local_database_file.close()
 
