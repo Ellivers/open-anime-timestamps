@@ -4,7 +4,6 @@
 from pathlib import Path
 
 import ffmpeg
-import args
 import requests
 import urllib.parse
 from tqdm import tqdm

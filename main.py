@@ -252,8 +252,6 @@ def main():
 			
 		myanimelist.empty_anime_info_cache()
 
-	local_database_file.close()
-
 	# Scrape other timestamps
 	start_index = 0
 	if args.parsed_args.scrape_start != None:
@@ -359,6 +357,10 @@ def main():
 				if ed_duration != -1 and start != -1 and ep['ending']['end'] == -1:
 					ep['ending']['end'] = start + ed_duration
 					continue
+			
+			local_database_file.seek(0)
+			json.dump(local_database, local_database_file, indent=4)
+			local_database_file.truncate()
 
 		for theme in themes:
 			file_path = Path(theme["file_path"])
@@ -422,6 +424,8 @@ def main():
 		episodes = animixplay.get_episodes(title)
 		fingerprint.fingerprint_episodes(anidb_id, episodes)
 		'''
+	
+	local_database_file.close()
 
 if __name__ == '__main__':
 	main()

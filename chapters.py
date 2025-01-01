@@ -7,7 +7,7 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
   chapters = get_chapters(file_path)
   if len(chapters) == 0:
     return
-  logprint(f"[chapters.py] [INFO] Found chapter data in {file_path.rsplit('/', 1)[1]}")
+  
   local_database_file = open("timestamps.json", "r+")
   local_database = json.load(local_database_file)
 
@@ -51,6 +51,7 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
     if results == 'op' and results_next not in ['op','ed'] \
       and timestamp_data['opening']['start'] + timestamp_data['opening']['end'] == -2:
 
+      logprint(f"[chapters.py] [INFO] Found opening in chapter data of {file_path.rsplit('/', 1)[1]}")
       timestamp_data['opening']['start'] = round(start)
       timestamp_data['opening']['end'] = round(end)
       if 'chapter_data' not in timestamp_data['sources']:
@@ -59,6 +60,7 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
     if results == 'ed' and results_next not in ['op','ed'] \
       and timestamp_data['ending']['start'] + timestamp_data['ending']['end'] == -2:
 
+      logprint(f"[chapters.py] [INFO] Found ending in chapter data of {file_path.rsplit('/', 1)[1]}")
       timestamp_data['ending']['start'] = round(start)
       timestamp_data['ending']['end'] = round(end)
       if 'chapter_data' not in timestamp_data['sources']:
