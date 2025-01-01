@@ -330,19 +330,7 @@ def main():
 		themes = animethemesmoe.download_themes(jp_title, anidb_id, themes_to_download)
 
 		if len(themes) == 0:
-			logprint(f"[main.py] [WARNING] \"{kitsu_title}\" provided no themes! Skipping")
-			continue
-
-		# Check if OP/ED files are available to fill missing data
-		if 'op' in themes_to_download and 'ed' not in themes_to_download and not any('OP' in t['theme_type'] for t in themes):
-			logprint(f"[main.py] [INFO] Missing opening info for \"{kitsu_title}\" was not provided (it probably has no openings). Skipping")
-			for f in glob("./endings/*"):
-				os.remove(f)
-			continue
-		if 'ed' in themes_to_download and 'op' not in themes_to_download and not any('ED' in t['theme_type'] for t in themes):
-			logprint(f"[main.py] [INFO] Missing ending info for \"{kitsu_title}\" was not provided (it probably has no endings). Skipping")
-			for f in glob("./openings/*"):
-				os.remove(f)
+			logprint(f"[main.py] [INFO] No themes to get from \"{kitsu_title}\". Skipping")
 			continue
 
 		# Make sure that existing timestamps for this series have ends marked

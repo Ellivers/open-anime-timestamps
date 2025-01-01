@@ -64,6 +64,9 @@ def fingerprint_episodes(anidb_id, episodes):
 
 	series = local_database[anidb_id]
 
+	opening_count = openings_dejavu.db.get_num_songs()
+	ending_count = endings_dejavu.db.get_num_songs()
+
 	for episode in episodes:
 		episode_number = episode['episode_number']
 
@@ -72,8 +75,6 @@ def fingerprint_episodes(anidb_id, episodes):
 		if len(indices) > 0:
 			# Check if timestamps are incomplete, and if so, what to update
 			ep = series[indices[0]]
-			opening_count = openings_dejavu.db.get_num_songs()
-			ending_count = endings_dejavu.db.get_num_songs()
 
 			update_opening = -1 in [ep['opening']['start'],ep['opening']['end']] and opening_count > 0
 			update_ending = -1 in [ep['ending']['start'],ep['ending']['end']] and ending_count > 0
@@ -94,7 +95,7 @@ def fingerprint_episodes(anidb_id, episodes):
 		else:
 			timestamp_data = series[indices[0]]
 
-		if add_method != 'update_ed':
+		if add_method != 'update_ed' and opening_count > 0:
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for opening")
 			
 			opening_result = openings_recognizer.recognize_file(episode["mp3_path"])
@@ -109,7 +110,7 @@ def fingerprint_episodes(anidb_id, episodes):
 			else:
 				logprint("[fingerprint.py] [INFO] No matches found for opening")
 		
-		if add_method != 'update_op':
+		if add_method != 'update_op' and ending_count > 0:
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for ending")
 			
 			ending_result = endings_recognizer.recognize_file(episode["mp3_path"])
