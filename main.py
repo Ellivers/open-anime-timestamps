@@ -17,6 +17,7 @@ import fingerprint
 import chapters
 import math
 import myanimelist
+import shutil
 from utils import logprint, get_timestamp_template, merge_timestamps
 
 Path("./openings").mkdir(exist_ok=True)
@@ -85,6 +86,10 @@ def main():
 		local_database_file.truncate()
 		local_database_file.close()
 
+		return
+	
+	if args.parsed_args.episodes_max_size > shutil.disk_usage('/').free // (2**20):
+		logprint(f'[main.py] [ERROR] Inputted max episode disk size {args.parsed_args.episodes_max_size} MiB is greater than space left on disk. Exiting')
 		return
 	
 	# Update the anime titles cache

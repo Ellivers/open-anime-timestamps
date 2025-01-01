@@ -17,10 +17,6 @@ URL_API_BASE = URL_BASE + "/api?m="
 
 MAX_RETRY_COUNT = args.parsed_args.scrape_max_retry or 10
 
-# Total size taken up by downloaded episodes
-# Default value is 10GiB
-DEFAULT_MAX_DOWNLOAD_SIZE = 10*1024*1024*1024
-
 EXTERNAL_LINKS_SELECTOR = cssselect.CSSSelector('.external-links a')
 DL_REDIRECT_SELECTOR = cssselect.CSSSelector('#pickDownload a')
 
@@ -78,10 +74,11 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
   first_episode_num = full_episode_list[0]["episode"]
 
   current_download_size = 0
-  if args.parsed_args.episodes_max_size:
-    max_download_size = args.parsed_args.episodes_max_size * 1024 * 1024 # Arg is in MiB
-  else:
-    max_download_size = DEFAULT_MAX_DOWNLOAD_SIZE
+
+  # Total size taken up by downloaded episodes
+  # Default value is 10GiB
+  # Arg is in MiB
+  max_download_size = args.parsed_args.episodes_max_size * 1024 * 1024
 
   episode_files = []
 
