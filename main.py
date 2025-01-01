@@ -1,3 +1,4 @@
+from glob import glob
 import os
 import json
 from pathlib import Path
@@ -259,7 +260,7 @@ def main():
 		start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.scrape_start), 0)
 
 	for anime in anime_titles[start_index:]:
-		anidb_id = anime["id"]
+		anidb_id = str(anime["id"])
 		kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 
 		if not kitsu_id:
@@ -335,9 +336,13 @@ def main():
 		# Check if OP/ED files are available to fill missing data
 		if 'op' in themes_to_download and 'ed' not in themes_to_download and not any('OP' in t['theme_type'] for t in themes):
 			logprint(f"[main.py] [INFO] Missing opening info for \"{kitsu_title}\" was not provided (it probably has no openings). Skipping")
+			for f in glob("./endings/*"):
+				os.remove(f)
 			continue
 		if 'ed' in themes_to_download and 'op' not in themes_to_download and not any('ED' in t['theme_type'] for t in themes):
 			logprint(f"[main.py] [INFO] Missing ending info for \"{kitsu_title}\" was not provided (it probably has no endings). Skipping")
+			for f in glob("./openings/*"):
+				os.remove(f)
 			continue
 
 		# Make sure that existing timestamps for this series have ends marked
@@ -398,7 +403,7 @@ def main():
 					continue
 
 				# Attempt parse any chapters the video file might have
-				chapters.parse_chapters(video_path, str(anidb_id), episode['episode_number'], themes)
+				chapters.parse_chapters(video_path, anidb_id, episode['episode_number'], themes)
 
 				logprint(f"[main.py] [INFO] Converting {video_path} to mp3")
 
@@ -407,7 +412,7 @@ def main():
 
 			logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
 
-			fingerprint.fingerprint_episodes(str(anidb_id), episodes)
+			fingerprint.fingerprint_episodes(anidb_id, episodes)
 
 			episode_index = next_index
 
