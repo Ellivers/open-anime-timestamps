@@ -10,7 +10,7 @@ PARSE_SERVER = "https://parseapi.back4app.com"
 APP_ID = "CfnxYFbrcy0Eh517CcjOAlrAOH9hfe7dpOqfMcJj"
 JS_ID = "Ke0lTaWiPPvLmpDOLLrukkbdAq34GTxVIEh4wcAU"
 
-def find_episodes(name, season, episode_count):
+def find_episodes(name: str, season: int, episode_count: int) -> list[dict] | None:
 	where = {
 		"$and": [
 			{

@@ -14,7 +14,7 @@ TEST_HEADERS = {
 # Instantiate the client with an endpoint.
 client = GraphqlClient(endpoint="http://api.anime-skip.com/graphql")
 
-def find_episodes(anilist_id: str, from_ratelimit=False):
+def find_episodes(anilist_id: str, from_ratelimit=False) -> list[dict] | None:
 	if from_ratelimit:
 		headers = TEST_HEADERS
 	else:
@@ -61,7 +61,7 @@ def find_episodes(anilist_id: str, from_ratelimit=False):
 	except Exception:
 		return None
 
-def parse_timestamps(timestamps: list, episode_number: float):
+def parse_timestamps(timestamps: list, episode_number: float) -> dict:
 	# Timestamp list passed from main.py is never empty
 	timestamp_data = get_timestamp_template(episode_number)
 

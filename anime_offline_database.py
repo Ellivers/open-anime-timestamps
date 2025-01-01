@@ -61,7 +61,7 @@ def update_id_database():
 	json.dump(id_database, local_database_file, indent=4)
 	local_database_file.close()
 
-def can_download():
+def can_download() -> bool:
 	if os.path.isfile(PATH) and os.access(PATH, os.R_OK):
 		# Only update the file once an hour
 		update_time = os.path.getmtime(PATH)
@@ -69,7 +69,7 @@ def can_download():
 	else:
 		return True
 
-def convert_anime_id(anime_id: str|int, id_from: str, id_to: str):
+def convert_anime_id(anime_id: str|int, id_from: str, id_to: str) -> int:
 	local_database_file = open(PATH, "r")
 	local_database = json.load(local_database_file)
 

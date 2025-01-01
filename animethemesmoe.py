@@ -92,7 +92,7 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> lis
 	return themes_list
 
 
-def get_themes(name, anidb_id):
+def get_themes(name: str, anidb_id: str|int) -> list[dict]:
 	response = requests.get(f"https://api.animethemes.moe/anime?include=resources,animethemes,animethemes.animethemeentries.videos.audio&q={urllib.parse.quote(name, safe='')}")
 	
 	if response.headers["Content-Type"] != "application/json":

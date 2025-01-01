@@ -2,11 +2,11 @@ import requests
 
 from utils import logprint
 
-def details(id):
+def details(id: str|int):
 	response = requests.get(f"https://kitsu.io/api/edge/anime/{id}")
 	return response.json()
 
-def episodes(id, offset=0):
+def episodes(id: str|int, offset=0):
 	response = requests.get(f"https://kitsu.io/api/edge/anime/{id}/episodes?page[limit]=20&page[offset]={offset}")
 	data = response.json()
 	episodes_list = [*data["data"]]

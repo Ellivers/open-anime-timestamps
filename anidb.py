@@ -25,7 +25,7 @@ def update_title_cache():
 	json_file.write(converted_json.encode('utf-8'))
 	json_file.close()
 
-def can_download():
+def can_download() -> bool:
 	if os.path.isfile(ANIME_DATA_PATH) and os.access(ANIME_DATA_PATH, os.R_OK):
 		# Only update the file once an hour
 		update_time = os.path.getmtime(ANIME_DATA_PATH)

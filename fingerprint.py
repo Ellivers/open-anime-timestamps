@@ -29,7 +29,7 @@ openings_recognizer = FileRecognizer(openings_dejavu)
 endings_dejavu = Dejavu(endings_database_cfg)
 endings_recognizer = FileRecognizer(endings_dejavu)
 
-def fingerprint_episodes(anidb_id, episodes):
+def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 	logprint("[fingerprint.py] [INFO] Adding openings to fingerprint database")
 
 	openings_dejavu.fingerprint_directory("openings", [".mp3"])

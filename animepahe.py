@@ -114,10 +114,10 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
   return (episode_files, None)
 
 
-def get_episode_list_page(anime_session: str, page: int):
+def get_episode_list_page(anime_session: str, page: int) -> list[dict]:
   return requests.get(URL_API_BASE + f"release&sort=episode_asc&page={page}&id={anime_session}",cookies=COOKIES).json()
 
-def get_episode_list(anime_session: str) -> list:
+def get_episode_list(anime_session: str) -> list[dict]:
   response = get_episode_list_page(anime_session, 1)
 
   episode_list = response["data"]

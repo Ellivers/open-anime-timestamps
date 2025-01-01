@@ -1,13 +1,13 @@
 import args
 
-def is_not_silent():
+def is_not_silent() -> bool:
 	return not args.parsed_args.silent
 
 def logprint(message: str, ignore_silent=False):
   if is_not_silent() or ignore_silent:
     print(message)
 
-def get_timestamp_template(episode_number, source=None):
+def get_timestamp_template(episode_number, source:str = None):
   data = {
 		"episode_number": float(episode_number),
 		"recap": {

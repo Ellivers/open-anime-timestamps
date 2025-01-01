@@ -40,17 +40,17 @@ def main():
 	if args.parsed_args.combine_database:
 		path = args.parsed_args.combine_database
 		if not os.path.exists(path):
-			logprint(f"[main.py] [ERROR] Could not find file {path}")
+			logprint(f"[main.py] [ERROR] Could not find file {path}",ignore_silent=True)
 			return
 		file = open(path)
 		try:
 			import_db_file = json.load(file)
 		except json.decoder.JSONDecodeError:
-			logprint("[main.py] [ERROR] Inputted file is not a valid JSON file")
+			logprint("[main.py] [ERROR] Inputted file is not a valid JSON file",ignore_silent=True)
 			return
 		
 		if type(import_db_file) is not dict:
-			logprint("[main.py] [ERROR] Inputted file is not a JSON dict")
+			logprint("[main.py] [ERROR] Inputted file is not a JSON dict",ignore_silent=True)
 			return
 		
 		for key, value in list(dict.items(import_db_file)):
@@ -90,7 +90,7 @@ def main():
 		return
 	
 	if args.parsed_args.episodes_max_size > shutil.disk_usage('/').free // (2**20):
-		logprint(f'[main.py] [ERROR] Inputted max episode disk size {args.parsed_args.episodes_max_size} MiB is greater than space left on disk. Exiting')
+		logprint(f'[main.py] [ERROR] Inputted max episode disk size {args.parsed_args.episodes_max_size} MiB is greater than space left on disk. Exiting',ignore_silent=True)
 		return
 	
 	# Update the anime titles cache
