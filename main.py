@@ -332,6 +332,14 @@ def main():
 			logprint(f"[main.py] [WARNING] \"{kitsu_title}\" provided no themes! Skipping")
 			continue
 
+		# Check if OP/ED files are available to fill missing data
+		if 'op' in themes_to_download and 'ed' not in themes_to_download and not any('OP' in t['theme_type'] for t in themes):
+			logprint(f"[main.py] [INFO] Missing opening info for \"{kitsu_title}\" was not provided (it probably has no openings). Skipping")
+			continue
+		if 'ed' in themes_to_download and 'op' not in themes_to_download and not any('ED' in t['theme_type'] for t in themes):
+			logprint(f"[main.py] [INFO] Missing ending info for \"{kitsu_title}\" was not provided (it probably has no endings). Skipping")
+			continue
+
 		# Make sure that existing timestamps for this series have ends marked
 		if len(series) > 0 and \
 			any((ep['opening']['start'] != -1 and ep['opening']['end'] == -1) or (ep['ending']['start'] != -1 and ep['ending']['end'] == -1) for ep in series):

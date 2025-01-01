@@ -84,7 +84,7 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
 
   for i in range(start_index, len(full_episode_list)):
     episode = full_episode_list[i]
-    episode_number = episode["episode"] - (first_episode_num - 1)
+    episode_number = float(episode["episode"] - (first_episode_num - 1))
 
     if current_download_size > max_download_size:
       logprint(f"[animepahe.py] [INFO] Episode {episode_number} exceeded the size limit ({int((current_download_size - max_download_size)/1024)} KiB over). Episode batch ended")
