@@ -267,10 +267,29 @@ def main():
 		kitsu_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
 		episode_count = kitsu_details['data']['attributes']['episodeCount']
 
+		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
+		if not pahe_session:
+			continue
+
+		total_episodes = animepahe.get_episode_list(pahe_session)
+		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\"")
+
+		if len(total_episodes) == 0:
+			continue
+		
 		if anidb_id not in local_database:
 			local_database[anidb_id] = []
 
 		series = local_database[anidb_id]
+
+		# Check if all episodes in the list already have defined OPs and EDs
+		if all(any(ep2['episode_number'] == float(ep['episode']) and -1 not in [
+				ep2['opening']['start'],ep2['opening']['end'],
+				ep2['ending']['start'],ep2['ending']['end']
+			] for ep2 in series) for ep in total_episodes):
+			
+			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
+			continue
 
 		requirements = []
 		for ep in series:
@@ -292,10 +311,6 @@ def main():
 
 		if len(themes_to_download) == 0:
 			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
-			continue
-		
-		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
-		if not pahe_session:
 			continue
 
 		jp_title = None
@@ -355,9 +370,6 @@ def main():
 			AudioSegment.from_file(file_path).export(mp3_path, format="mp3")
 			os.remove(file_path)
 			theme["file_path"] = mp3_path
-
-		total_episodes = animepahe.get_episode_list(pahe_session)
-		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\"")
 
 		episode_index = 0
 		while episode_index != None:
