@@ -29,6 +29,8 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
       op_lengths.append(theme['duration'])
     elif "ED" in theme['type']:
       ed_lengths.append(theme['duration'])
+  
+  chapters_end = float(chapters[-1]['end'])
 
   for i in range(len(chapters)):
     chapter = chapters[i]
@@ -42,9 +44,9 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
 
     duration = end - start
 
-    results = check_op_ed(duration, i / len(chapters), op_lengths, ed_lengths)
+    results = check_op_ed(duration, start / chapters_end, op_lengths, ed_lengths)
     if next_chapter:
-      results_next = check_op_ed(float(next_chapter['end'])-float(next_chapter['start']), (i+1) / len(chapters), op_lengths, ed_lengths)
+      results_next = check_op_ed(float(next_chapter['end'])-float(next_chapter['start']), float(next_chapter['start']) / chapters_end, op_lengths, ed_lengths)
     else:
       results_next = None
 
@@ -77,9 +79,9 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
   return timestamp_data
 
 def check_op_ed(duration: float, position: float, op_lengths: list, ed_lengths: list) -> str:
-  if position < 0.35 and any(abs(duration - l) <= 1.5 for l in op_lengths): # It might be at the beginning (an opening)
+  if position < 0.35 and any(abs(duration - l) <= 1.5 for l in op_lengths): # Check for openings
     return 'op'
-  if position > 0.6 and any(abs(duration - l) <= 1.5 for l in ed_lengths): # It might be at the end (an ending)
+  if position > 0.7 and any(abs(duration - l) <= 1.5 for l in ed_lengths): # Check for endings
     return 'ed'
   
   return None
