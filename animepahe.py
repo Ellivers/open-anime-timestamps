@@ -125,7 +125,7 @@ def get_episode_list(anime_session: str) -> list[dict]:
   if response["last_page"] == 1:
     return episode_list
   
-  for i in range(1, response["last_page"]+1):
+  for i in range(2, response["last_page"]+1):
     episode_list.extend(get_episode_list_page(anime_session, i)["data"])
 
   return episode_list
