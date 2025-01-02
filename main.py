@@ -356,13 +356,11 @@ def main():
 				if op_duration != -1 and start != -1 and ep['opening']['end'] == -1:
 					logprint(f"[main.py] [INFO] Completed opening timestamp for episode {ep['episode_number']}")
 					ep['opening']['end'] = start + op_duration
-					continue
 
 				start = ep['ending']['start']
 				if ed_duration != -1 and start != -1 and ep['ending']['end'] == -1:
 					logprint(f"[main.py] [INFO] Completed ending timestamp for episode {ep['episode_number']}")
 					ep['ending']['end'] = start + ed_duration
-					continue
 			
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)
