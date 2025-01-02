@@ -91,17 +91,17 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
       return (episode_files, i)
 
     if any(e['episode_number'] == episode_number and not (e['op'] or e['ed']) for e in requirements):
-      logprint(f"[animepahe.py] [INFO] Opening and ending timestamps for episode {episode_number} of anime with session {anime_session} are already defined. Skipping")
+      logprint(f"[animepahe.py] [INFO] Opening and ending timestamps for episode {episode_number} are already defined. Skipping")
       continue
 
-    logprint(f"[animepahe.py] [INFO] Getting download link for episode {episode_number} of anime with session {anime_session}")
+    logprint(f"[animepahe.py] [INFO] Getting download link for episode {episode_number}")
     source = get_episode_download(anime_session, episode["session"])
 
     video_path, file_size = download_episode(source)
     current_download_size += file_size
 
     if video_path == None:
-      logprint(f"[animepahe.py] [WARNING] Couldn't get video path for episode {episode_number} with anime session {anime_session}")
+      logprint(f"[animepahe.py] [WARNING] Couldn't get video path for episode {episode_number}")
       continue
 
     episode_files.append({
