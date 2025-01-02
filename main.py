@@ -278,7 +278,7 @@ def main():
 			continue
 
 		total_episodes = animepahe.get_episode_list(pahe_session)
-		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\"")
+		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\" with ID {anidb_id}")
 
 		if len(total_episodes) == 0:
 			continue
@@ -369,18 +369,13 @@ def main():
 
 		####
 		# This is also to be deleted
-		# Check if all episodes in the list already have defined OPs and EDs
-		if all(any(ep2['episode_number'] == float(ep['episode']) and -1 not in [
-				ep2['opening']['start'],ep2['opening']['end'],
-				ep2['ending']['start'],ep2['ending']['end']
-			] for ep2 in series) for ep in total_episodes):
-			
-			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
-			for f in glob("./openings/*"):
-				os.remove(f)
-			for f in glob("./endings/*"):
-				os.remove(f)
-			continue
+		requirements = []
+		for ep in series:
+			requirements.append({
+				"episode_number": ep['episode_number'],
+				"op": ep['opening']['start'] == -1 or ep['opening']['end'] == -1,
+				"ed": ep['ending']['start'] == -1 or ep['ending']['end'] == -1
+			})
 		####
 
 		for theme in themes:
