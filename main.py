@@ -367,6 +367,22 @@ def main():
 			local_database_file.truncate()
 			local_database_file.close()
 
+		####
+		# This is also to be deleted
+		# Check if all episodes in the list already have defined OPs and EDs
+		if all(any(ep2['episode_number'] == float(ep['episode']) and -1 not in [
+				ep2['opening']['start'],ep2['opening']['end'],
+				ep2['ending']['start'],ep2['ending']['end']
+			] for ep2 in series) for ep in total_episodes):
+			
+			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
+			for f in glob("./openings/*"):
+				os.remove(f)
+			for f in glob("./endings/*"):
+				os.remove(f)
+			continue
+		####
+
 		for theme in themes:
 			file_path = Path(theme["file_path"])
 
