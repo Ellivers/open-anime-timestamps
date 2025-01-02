@@ -251,6 +251,8 @@ def main():
 				local_database_file.truncate()
 			
 		myanimelist.empty_anime_info_cache()
+	
+	local_database_file.close()
 
 	# Scrape other timestamps
 	start_index = 0
@@ -334,6 +336,7 @@ def main():
 		# Make sure that existing timestamps for this series have ends marked
 		if len(series) > 0 and \
 			any((ep['opening']['start'] != -1 and ep['opening']['end'] == -1) or (ep['ending']['start'] != -1 and ep['ending']['end'] == -1) for ep in series):
+			local_database_file = open("timestamps.json", "r+")
 
 			openings = [t for t in themes if "OP" in t['type']]
 			endings = [t for t in themes if "ED" in t['type']]
@@ -361,6 +364,7 @@ def main():
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)
 			local_database_file.truncate()
+			local_database_file.close()
 
 		for theme in themes:
 			file_path = Path(theme["file_path"])
@@ -424,8 +428,6 @@ def main():
 		episodes = animixplay.get_episodes(title)
 		fingerprint.fingerprint_episodes(anidb_id, episodes)
 		'''
-	
-	local_database_file.close()
 
 if __name__ == '__main__':
 	main()
