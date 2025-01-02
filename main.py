@@ -334,6 +334,7 @@ def main():
 			continue
 
 		# Make sure that existing timestamps for this series have ends marked
+		# I'll remove this when all fixable timestamps have been fixed
 		if len(series) > 0 and \
 			any((ep['opening']['start'] != -1 and ep['opening']['end'] == -1) or (ep['ending']['start'] != -1 and ep['ending']['end'] == -1) for ep in series):
 			local_database_file = open("timestamps.json", "r+")
@@ -341,7 +342,7 @@ def main():
 			openings = [t for t in themes if "OP" in t['type']]
 			endings = [t for t in themes if "ED" in t['type']]
 
-			# All OPs and EDs have to have the same duration
+			# All OPs and EDs have to have the same duration for this to work
 			# This is because multiple durations would make the timestamp data inaccurate
 			op_duration = -1
 			ed_duration = -1
@@ -353,11 +354,13 @@ def main():
 			for ep in series:
 				start = ep['opening']['start']
 				if op_duration != -1 and start != -1 and ep['opening']['end'] == -1:
+					logprint(f"[main.py] [INFO] Completed opening timestamp for episode {ep['episode_number']}")
 					ep['opening']['end'] = start + op_duration
 					continue
 
 				start = ep['ending']['start']
 				if ed_duration != -1 and start != -1 and ep['ending']['end'] == -1:
+					logprint(f"[main.py] [INFO] Completed ending timestamp for episode {ep['episode_number']}")
 					ep['ending']['end'] = start + ed_duration
 					continue
 			
