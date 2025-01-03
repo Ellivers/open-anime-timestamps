@@ -32,6 +32,11 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
   
   chapters_end = float(chapters[-1]['end'])
 
+  found_data = {
+    'op': False,
+    'ed': False
+  }
+
   for i in range(len(chapters)):
     chapter = chapters[i]
     if i+1 < len(chapters):
@@ -50,7 +55,7 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
     else:
       results_next = None
 
-    if results == 'op' and results_next not in ['op','ed'] \
+    if results == 'op' and results_next not in ['op','ed'] and not found_data['op'] \
       and timestamp_data['opening']['start'] + timestamp_data['opening']['end'] == -2:
 
       logprint(f"[chapters.py] [INFO] Found opening in chapter data of {file_path.rsplit('/', 1)[1]}")
@@ -58,8 +63,9 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
       timestamp_data['opening']['end'] = round(end)
       if 'chapter_data' not in timestamp_data['sources']:
         timestamp_data['sources'].append('chapter_data')
+      found_data['op'] = True
 
-    if results == 'ed' and results_next not in ['op','ed'] \
+    if results == 'ed' and results_next not in ['op','ed'] and not found_data['ed'] \
       and timestamp_data['ending']['start'] + timestamp_data['ending']['end'] == -2:
 
       logprint(f"[chapters.py] [INFO] Found ending in chapter data of {file_path.rsplit('/', 1)[1]}")
@@ -67,13 +73,16 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
       timestamp_data['ending']['end'] = round(end)
       if 'chapter_data' not in timestamp_data['sources']:
         timestamp_data['sources'].append('chapter_data')
+      found_data['ed'] = True
 
   if len(indices) == 0:
     series.append(timestamp_data)
 
-  local_database_file.seek(0)
-  json.dump(local_database, local_database_file, indent=4)
-  local_database_file.truncate()
+  if True in [found_data['op'],found_data['ed']]:
+    local_database_file.seek(0)
+    json.dump(local_database, local_database_file, indent=4)
+    local_database_file.truncate()
+  
   local_database_file.close()
 
   return timestamp_data
