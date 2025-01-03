@@ -156,10 +156,22 @@ def decrypt_post_form(full_key: str, key: str, v1: int, v2: int) -> str:
     return r
 #
 
-def get_episode_download(anime_session: str, episode_session: str) -> str:
-  play_page = etree.HTML(requests.get(URL_BASE + f'/play/{anime_session}/{episode_session}',cookies=COOKIES).text)
+def get_play_page_html(url: str):
+  try:
+    response = requests.get(url,cookies=COOKIES)
+  except Exception:
+    # If killed, wait a second
+    logprint(f"[animepahe.py] [WARNING] Error while requesting player page. Trying again in one second")
+    time.sleep(1)
+    return get_play_page_html(url)
+  
+  return etree.HTML(response.text)
 
-  redirect_url = DL_REDIRECT_SELECTOR(play_page)[0].attrib['href']
+def get_episode_download(anime_session: str, episode_session: str) -> str:
+  play_page_url = URL_BASE + f'/play/{anime_session}/{episode_session}'
+  play_page_html = get_play_page_html(play_page_url)
+
+  redirect_url = DL_REDIRECT_SELECTOR(play_page_html)[0].attrib['href']
   redirect_html_text = requests.get(redirect_url,cookies=COOKIES).text
 
   dl_page_url = DL_PAGE_URL_REGEX.findall(redirect_html_text)[0] # Find the URL to the download page inside the redirection page
