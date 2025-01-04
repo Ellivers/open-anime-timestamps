@@ -2,6 +2,7 @@
 # Download series opening and endings
 
 from pathlib import Path
+import time
 
 import ffmpeg
 import requests
@@ -91,9 +92,20 @@ def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> lis
 	return themes_list
 
 
+def get_results(name: str):
+	try:
+		response = requests.get(f"https://api.animethemes.moe/anime?include=resources,animethemes,animethemes.animethemeentries.videos.audio&q={urllib.parse.quote(name, safe='')}")
+	except Exception:
+		# If killed, wait a second
+		logprint(f"[animethemesmoe.py] [WARNING] Error while getting search results. Trying again in one second")
+		time.sleep(1)
+		return get_results(name)
+
+	return response
+
 def get_themes(name: str, anidb_id: str|int) -> list[dict]:
-	response = requests.get(f"https://api.animethemes.moe/anime?include=resources,animethemes,animethemes.animethemeentries.videos.audio&q={urllib.parse.quote(name, safe='')}")
-	
+	response = get_results()
+
 	if response.headers["Content-Type"] != "application/json":
 		return []
 	
