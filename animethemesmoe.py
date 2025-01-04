@@ -104,7 +104,7 @@ def get_results(name: str):
 	return response
 
 def get_themes(name: str, anidb_id: str|int) -> list[dict]:
-	response = get_results()
+	response = get_results(name)
 
 	if response.headers["Content-Type"] != "application/json":
 		return []
