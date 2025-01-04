@@ -399,26 +399,41 @@ def main():
 		while episode_index != None:
 			episodes, next_index = animepahe.download_episodes(pahe_session, total_episodes, requirements, episode_index)
 
+			new_episode_list = []
+
 			for episode in episodes:
 				video_path = episode["video_path"]
 
 				mp3_path = Path(video_path).with_suffix(".mp3")
-				episode["mp3_path"] = mp3_path
 
 				if not os.path.exists(video_path) and os.path.exists(mp3_path):
 					continue
 
 				# Attempt parse any chapters the video file might have
-				chapters.parse_chapters(video_path, anidb_id, episode['episode_number'], themes)
+				found_timestamps = chapters.parse_chapters(video_path, anidb_id, episode['episode_number'], themes)
+				if -1 not in [found_timestamps['opening']['start'],found_timestamps['opening']['end'],
+											found_timestamps['ending']['start'],found_timestamps['ending']['end']]:
+					logprint("[main.py] [INFO] Skipping episode, as timestamps are already defined")
+					os.remove(video_path)
+					continue
 
 				logprint(f"[main.py] [INFO] Converting {video_path} to mp3")
 
 				AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
+				new_episode_list.append({
+					"episode_number": episode['episode_number'],
+					"mp3_path": mp3_path
+				})
 				os.remove(video_path)
+			
+			if len(new_episode_list) == 0:
+				logprint(f"[main.py] [INFO] Episode batch {episode_index} for \"{kitsu_title}\" does not need to be fingerprinted")
+				episode_index = next_index
+				continue
 
 			logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
 
-			fingerprint.fingerprint_episodes(anidb_id, episodes)
+			fingerprint.fingerprint_episodes(anidb_id, new_episode_list)
 
 			episode_index = next_index
 
