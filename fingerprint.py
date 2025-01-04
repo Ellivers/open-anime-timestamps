@@ -132,9 +132,9 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 		if add_method == 'append':
 			series.append(timestamp_data)
 	
-		local_database_file.seek(0)
-		json.dump(local_database, local_database_file, indent=4)
-		local_database_file.truncate()
+	local_database_file.seek(0)
+	json.dump(local_database, local_database_file, indent=4)
+	local_database_file.truncate()
 	
 	local_database_file.close()
 

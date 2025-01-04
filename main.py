@@ -411,7 +411,7 @@ def main():
 
 				# Attempt parse any chapters the video file might have
 				found_timestamps = chapters.parse_chapters(video_path, anidb_id, episode['episode_number'], themes)
-				if -1 not in [found_timestamps['opening']['start'],found_timestamps['opening']['end'],
+				if found_timestamps and -1 not in [found_timestamps['opening']['start'],found_timestamps['opening']['end'],
 											found_timestamps['ending']['start'],found_timestamps['ending']['end']]:
 					logprint("[main.py] [INFO] Skipping episode, as timestamps are already defined")
 					os.remove(video_path)
