@@ -8,8 +8,9 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
   if len(chapters) == 0:
     return
   
-  local_database_file = open("timestamps.json", "r+")
+  local_database_file = open("timestamps.json", "r")
   local_database = json.load(local_database_file)
+  local_database_file.close()
 
   if anidb_id not in local_database:
     local_database[anidb_id] = []
@@ -79,11 +80,9 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
     series.append(timestamp_data)
 
   if True in [found_data['op'],found_data['ed']]:
-    local_database_file.seek(0)
+    local_database_file = open("timestamps.json", 'w')
     json.dump(local_database, local_database_file, indent=4)
-    local_database_file.truncate()
-  
-  local_database_file.close()
+    local_database_file.close()
 
   return timestamp_data
 

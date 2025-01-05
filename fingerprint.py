@@ -47,8 +47,9 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 	for f in glob.glob("./endings/*"):
 		os.remove(f)
 
-	local_database_file = open("timestamps.json", "r+")
+	local_database_file = open("timestamps.json", "r")
 	local_database = json.load(local_database_file)
+	local_database_file.close()
 
 	"""
 	indices = [i for i in range(len(local_database)) if local_database[i]["id"] == anidb_id]
@@ -132,11 +133,9 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 		if add_method == 'append':
 			series.append(timestamp_data)
 	
-		local_database_file.seek(0)
+		local_database_file = open("timestamps.json", 'w')
 		json.dump(local_database, local_database_file, indent=4)
-		local_database_file.truncate()
-	
-	local_database_file.close()
+		local_database_file.close()
 
 def drop_database_tables():
 	logprint("[fingerprint.py] [INFO] Clearing databases")

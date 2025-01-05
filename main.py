@@ -34,8 +34,9 @@ def main():
 			json.dump({}, f)
 			f.close()
 
-	local_database_file = open("timestamps.json", "r+")
+	local_database_file = open("timestamps.json", "r")
 	local_database: dict = json.load(local_database_file)
+	local_database_file.close()
 
 	if args.parsed_args.combine_database:
 		path = args.parsed_args.combine_database
@@ -81,10 +82,9 @@ def main():
 					series.append(merge_timestamps(ep, get_timestamp_template(episode_number)))
 				else:
 					series[indices[0]] = merge_timestamps(ep, series[indices[0]])
-		
-		local_database_file.seek(0)
+
+		local_database_file = open("timestamps.json", 'w')
 		json.dump(dict(sorted(local_database.items(), key=lambda pair: int(pair[0]))), local_database_file, indent=4)
-		local_database_file.truncate()
 		local_database_file.close()
 
 		return
@@ -187,9 +187,9 @@ def main():
 					else:
 						actual_series.append(timestamp_data)
 					
-				local_database_file.seek(0)
-				json.dump(local_database, local_database_file, indent=4)
-				local_database_file.truncate()
+					local_database_file = open("timestamps.json", 'w')
+					json.dump(local_database, local_database_file, indent=4)
+					local_database_file.close()
 			
 			# BetterVRV
 
@@ -246,9 +246,9 @@ def main():
 					else:
 						series.append(timestamp_data)
 
-				local_database_file.seek(0)
+				local_database_file = open("timestamps.json",'w')
 				json.dump(local_database, local_database_file, indent=4)
-				local_database_file.truncate()
+				local_database_file.close()
 			
 		myanimelist.empty_anime_info_cache()
 	
@@ -429,6 +429,11 @@ def main():
 			if len(new_episode_list) == 0:
 				logprint(f"[main.py] [INFO] Episode batch {episode_index} for \"{kitsu_title}\" does not need to be fingerprinted")
 				episode_index = next_index
+				if not next_index:
+					for f in glob("./openings/*"):
+						os.remove(f)
+					for f in glob("./endings/*"):
+						os.remove(f)
 				continue
 
 			logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
