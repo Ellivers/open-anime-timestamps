@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 from utils import is_not_silent, logprint
 
-def download_themes(name: str, anidb_id: int|str, to_download: list[str]) -> list[dict]:
-	themes = get_themes(name, anidb_id)
+def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download: list[str]) -> list[dict]:
+	themes = get_themes(name, anidb_id, kitsu_id)
 	themes_list = []
 
 	for theme in themes:
@@ -103,7 +103,7 @@ def get_results(name: str):
 
 	return response
 
-def get_themes(name: str, anidb_id: str|int) -> list[dict]:
+def get_themes(name: str, anidb_id: str|int, kitsu_id: int|str) -> list[dict]:
 	response = get_results(name)
 
 	if response.headers["Content-Type"] != "application/json":
@@ -118,6 +118,9 @@ def get_themes(name: str, anidb_id: str|int) -> list[dict]:
 	for anime in anime_list:
 		external_anidb_id = [resource['external_id'] for resource in anime['resources'] if resource['site'] == 'aniDB']
 		if len(external_anidb_id) == 0 or external_anidb_id[0] != int(anidb_id):
+			continue
+		external_kitsu_id = [resource['external_id'] for resource in anime['resources'] if resource['site'] == 'Kitsu']
+		if len(external_kitsu_id) == 0 or external_kitsu_id[0] != int(kitsu_id):
 			continue
 		themes = anime['animethemes']
 	

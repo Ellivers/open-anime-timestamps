@@ -327,7 +327,7 @@ def main():
 		else:
 			jp_title = titles[0]
 
-		themes = animethemesmoe.download_themes(jp_title, anidb_id, themes_to_download)
+		themes = animethemesmoe.download_themes(jp_title, anidb_id, kitsu_id, themes_to_download)
 
 		if len(themes) == 0:
 			logprint(f"[main.py] [INFO] No themes to get from \"{kitsu_title}\". Skipping")
