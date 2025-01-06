@@ -407,6 +407,10 @@ def main():
 				mp3_path = Path(video_path).with_suffix(".mp3")
 
 				if not os.path.exists(video_path) and os.path.exists(mp3_path):
+					new_episode_list.append({
+						"episode_number": episode['episode_number'],
+						"mp3_path": mp3_path
+					})
 					continue
 
 				# Attempt parse any chapters the video file might have
