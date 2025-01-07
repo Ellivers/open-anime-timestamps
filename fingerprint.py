@@ -51,15 +51,6 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 	local_database = json.load(local_database_file)
 	local_database_file.close()
 
-	"""
-	indices = [i for i in range(len(local_database)) if local_database[i]["id"] == anidb_id]
-	if len(indices) == 0:
-		local_database.append({"id": anidb_id, "titles": []})
-		indices = [len(local_database)-1]
-	
-	series = local_database[indices[0]]
-	"""
-
 	if anidb_id not in local_database:
 		local_database[anidb_id] = []
 
@@ -141,3 +132,21 @@ def drop_database_tables():
 	logprint("[fingerprint.py] [INFO] Clearing databases")
 	openings_dejavu.db.empty()
 	endings_dejavu.db.empty()
+
+def get_fingerprinted_songs() -> list[dict]:
+	songs_list = []
+
+	openings = [{'song_id': s['song_id'], 'song_name': s['song_name'], 'type': 'opening'} for s in openings_dejavu.db.get_songs()]
+	endings = [{'song_id': s['song_id'], 'song_name': s['song_name'], 'type': 'ending'} for s in endings_dejavu.db.get_songs()]
+
+	songs_list.extend(openings)
+	songs_list.extend(endings)
+	
+	return songs_list
+
+def get_song_by_id(id: int, song_type: str):
+	if song_type == 'opening':
+		return openings_dejavu.db.get_song_by_id(id)
+	if song_type == 'ending':
+		return endings_dejavu.db.get_song_by_id(id)
+	return None

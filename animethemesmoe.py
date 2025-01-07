@@ -4,6 +4,7 @@
 from pathlib import Path
 import time
 
+from fingerprint import get_fingerprinted_songs, get_song_by_id
 import ffmpeg
 import requests
 import urllib.parse
@@ -14,6 +15,8 @@ from utils import is_not_silent, logprint
 def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download: list[str]) -> list[dict]:
 	themes = get_themes(name, anidb_id, kitsu_id)
 	themes_list = []
+
+	fingerprinted_themes = get_fingerprinted_songs()
 
 	for theme in themes:
 		theme_type: str = theme["type"]
@@ -34,6 +37,28 @@ def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download
 			continue
 
 		audio_path = f"{theme_folder}/{file_name}"
+
+		# In case song is already fingerprinted
+		song_name = str(Path(file_name).with_suffix(''))
+		fingerprinted = False
+		for ft in fingerprinted_themes:
+			if ft['song_name'] != song_name:
+				continue
+			full_song_dict = get_song_by_id(ft['song_id'], ft['type'])
+			if not full_song_dict:
+				break
+			themes_list.append({
+				"file_path": audio_path,
+				"duration": float(full_song_dict['audio_length']),
+				"type": theme_type
+			})
+			fingerprinted = True
+			break
+
+		if fingerprinted:
+			logprint(f"[animethemesmoe.py] [INFO] {song_name} has already been fingerprinted. Skipping")
+			continue
+
 
 		if Path.exists(Path(audio_path).with_suffix('.mp3')):
 			audio_path = str(Path(audio_path).with_suffix('.mp3'))
