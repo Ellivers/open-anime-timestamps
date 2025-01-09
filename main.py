@@ -187,9 +187,9 @@ def main():
 					else:
 						actual_series.append(timestamp_data)
 					
-					local_database_file = open("timestamps.json", 'w')
-					json.dump(local_database, local_database_file, indent=4)
-					local_database_file.close()
+				local_database_file = open("timestamps.json", 'w')
+				json.dump(local_database, local_database_file, indent=4)
+				local_database_file.close()
 			
 			# BetterVRV
 
