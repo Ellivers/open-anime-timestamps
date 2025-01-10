@@ -57,7 +57,7 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
       results_next = None
 
     if results == 'op' and results_next not in ['op','ed'] and not found_data['op'] \
-      and timestamp_data['opening']['start'] + timestamp_data['opening']['end'] == -2:
+      and (timestamp_data['opening']['start'] == -1 or timestamp_data['opening']['end'] == -1):
 
       logprint(f"[chapters.py] [INFO] Found opening in chapter data of {file_path.rsplit('/', 1)[1]}")
       timestamp_data['opening']['start'] = round(start)
@@ -67,7 +67,7 @@ def parse_chapters(file_path: str, anidb_id: str, episode_number: float, themes:
       found_data['op'] = True
 
     if results == 'ed' and results_next not in ['op','ed'] and not found_data['ed'] \
-      and timestamp_data['ending']['start'] + timestamp_data['ending']['end'] == -2:
+      and (timestamp_data['ending']['start'] == -1 or timestamp_data['ending']['end'] == -1):
 
       logprint(f"[chapters.py] [INFO] Found ending in chapter data of {file_path.rsplit('/', 1)[1]}")
       timestamp_data['ending']['start'] = round(start)
