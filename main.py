@@ -77,6 +77,19 @@ def main():
 				if 'ending' in ep and ep['ending'].get('end',-1) != -1 and ep['ending'].get('start',-1) == -1:
 					ep['ending']['start'] = 0
 
+				if ep['recap']['start'] > ep['recap']['end']:
+					logprint(f"[main.py] [WARNING] Clearing recap timestamps with 'start' greater than 'end' (episode {episode_number} series {key})")
+					ep['recap']['start'] = -1
+					ep['recap']['end'] = -1
+				if ep['opening']['start'] > ep['opening']['end']:
+					logprint(f"[main.py] [WARNING] Clearing opening timestamps with 'start' greater than 'end' (episode {episode_number} series {key})")
+					ep['opening']['start'] = -1
+					ep['opening']['end'] = -1
+				if ep['ending']['start'] > ep['ending']['end']:
+					logprint(f"[main.py] [WARNING] Clearing ending timestamps with 'start' greater than 'end' (episode {episode_number} series {key})")
+					ep['ending']['start'] = -1
+					ep['ending']['end'] = -1
+
 				indices = [i for i in range(len(series)) if float(series[i]['episode_number']) == float(episode_number)]
 				if len(indices) == 0:
 					series.append(merge_timestamps(ep, get_timestamp_template(episode_number)))

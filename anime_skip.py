@@ -68,6 +68,8 @@ def parse_timestamps(timestamps: list, episode_number: float) -> dict:
 	# anime-skip has a lot of timestamp types, most of which don't make sense to me
 	# only taking a subset of them
 	# "Canon" type means resuming from something else, like at the end of an opening
+
+	timestamps.sort(lambda t: float(t["at"]))
 	
 	ongoing_type = None
 
