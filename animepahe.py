@@ -42,32 +42,31 @@ def get_anime_session(name: str, anidb_id: int|str) -> list:
   if search_result["total"] == 0:
     logprint(f"[animepahe.py] [INFO] Found no results for \"{name}\". Skipping anime")
     return
-  anime = search_result["data"][0]
+  
+  for anime in search_result["data"]:
+    # Check if the ID matches
+    page_request = requests.get(URL_BASE + '/a/' + str(anime["id"]),cookies=COOKIES)
 
-  # Check if the ID matches
-  page_request = requests.get(URL_BASE + '/a/' + str(anime["id"]),cookies=COOKIES)
-
-  if page_request.status_code != 200:
-    logprint(f"[animepahe.py] [WARNING] Getting page for \"{name}\" gave status code {request.status_code} (2). Skipping anime.")
-    return
-
-  page = etree.HTML(page_request.text)
-
-  found_anidb_id = None
-
-  for link in EXTERNAL_LINKS_SELECTOR(page):
-    if link.text != "AniDB":
+    if page_request.status_code != 200:
       continue
 
-    found_anidb_id = int(ANIDB_ID_REGEX.findall(link.attrib['href'])[0])
-    break
+    page = etree.HTML(page_request.text)
 
-  if found_anidb_id != int(anidb_id):
-    logprint(f"[animepahe.py] [WARNING] {name}: found AniDB ID {found_anidb_id} doesn't match inputted {anidb_id}. Skipping")
-    return
-  # End of ID check
+    found_anidb_id = None
 
-  return anime["session"]
+    for link in EXTERNAL_LINKS_SELECTOR(page):
+      if link.text != "AniDB":
+        continue
+
+      found_anidb_id = int(ANIDB_ID_REGEX.findall(link.attrib['href'])[0])
+      break
+
+    if found_anidb_id != int(anidb_id):
+      continue
+
+    return anime["session"]
+  
+  return None
   
 def download_episodes(anime_session: str, full_episode_list: list, requirements: list, start_index=0) -> tuple[list[dict], int]:
   logprint(f"[animepahe.py] [INFO] Downloading episodes for anime with session {anime_session}")

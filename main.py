@@ -291,6 +291,7 @@ def main():
 
 		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
 		if not pahe_session:
+			logprint(f"[main.py] [WARNING] No anime found with ID {anidb_id}. Skipping")
 			continue
 
 		total_episodes = animepahe.get_episode_list(pahe_session)
