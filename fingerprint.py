@@ -91,7 +91,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for opening")
 			
 			opening_result = openings_recognizer.recognize_file(episode["video_path"])
-			if opening_result:
+			if opening_result and opening_result['confidence'] > 12:
 				logprint(f"[fingerprint.py] [INFO] Found opening with confidence {opening_result['confidence']}")
 				opening_start = int(abs(opening_result["offset_seconds"])) # convert to positive and round down
 				opening_end = opening_start + int(opening_result["audio_length"])
@@ -107,7 +107,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for ending")
 			
 			ending_result = endings_recognizer.recognize_file(episode["video_path"])
-			if ending_result:
+			if ending_result and ending_result['confidence'] > 12:
 				logprint(f"[fingerprint.py] [INFO] Found ending with confidence {ending_result['confidence']}")
 				ending_start = int(abs(ending_result["offset_seconds"])) # convert to positive and round down
 				ending_end = ending_start + int(ending_result["audio_length"])
