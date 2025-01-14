@@ -32,11 +32,11 @@ endings_recognizer = FileRecognizer(endings_dejavu)
 def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 	logprint("[fingerprint.py] [INFO] Adding openings to fingerprint database")
 
-	openings_dejavu.fingerprint_directory("openings", [".mp3"])
+	openings_dejavu.fingerprint_directory("openings", [".ogg"])
 
 	logprint("[fingerprint.py] [INFO] Adding endings to fingerprint database")
 
-	endings_dejavu.fingerprint_directory("endings", [".mp3"])
+	endings_dejavu.fingerprint_directory("endings", [".ogg"])
 
 	# Clear the ending/opening folders after done
 	logprint("[fingerprint.py] [INFO] Clearing openings folder")
@@ -79,7 +79,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 				add_method = 'update_ed'
 			else:
 				logprint(f"[fingerprint.py] [INFO] Episode {episode_number} does not need to be checked")
-				os.remove(episode["mp3_path"])
+				os.remove(episode["video_path"])
 				continue
 
 		if add_method == 'append':
@@ -90,7 +90,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 		if add_method != 'update_ed' and opening_count > 0:
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for opening")
 			
-			opening_result = openings_recognizer.recognize_file(episode["mp3_path"])
+			opening_result = openings_recognizer.recognize_file(episode["video_path"])
 			if opening_result:
 				logprint(f"[fingerprint.py] [INFO] Found opening with confidence {opening_result['confidence']}")
 				opening_start = int(abs(opening_result["offset_seconds"])) # convert to positive and round down
@@ -106,7 +106,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 		if add_method != 'update_op' and ending_count > 0:
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for ending")
 			
-			ending_result = endings_recognizer.recognize_file(episode["mp3_path"])
+			ending_result = endings_recognizer.recognize_file(episode["video_path"])
 			if ending_result:
 				logprint(f"[fingerprint.py] [INFO] Found ending with confidence {ending_result['confidence']}")
 				ending_start = int(abs(ending_result["offset_seconds"])) # convert to positive and round down
@@ -119,7 +119,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 			else:
 				logprint("[fingerprint.py] [INFO] No matches found for ending")
 
-		os.remove(episode["mp3_path"])
+		os.remove(episode["video_path"])
 
 		if add_method == 'append':
 			series.append(timestamp_data)

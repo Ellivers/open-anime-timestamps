@@ -60,8 +60,6 @@ def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download
 			continue
 
 
-		if Path.exists(Path(audio_path).with_suffix('.mp3')):
-			audio_path = str(Path(audio_path).with_suffix('.mp3'))
 		if Path.exists(Path(audio_path)):
 			logprint(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
 

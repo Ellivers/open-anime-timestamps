@@ -102,7 +102,10 @@ def main():
 
 		return
 	
-	if args.parsed_args.episodes_max_size > shutil.disk_usage('/').free // (2**20):
+	# Also count size of existing downloaded episodes as free space
+	episodes_size = sum(os.path.getsize('./episodes/' + f) for f in os.listdir('./episodes'))
+
+	if args.parsed_args.episodes_max_size > (shutil.disk_usage('/').free + episodes_size) // (2**20):
 		logprint(f'[main.py] [ERROR] Inputted max episode disk size {args.parsed_args.episodes_max_size} MiB is greater than space left on disk. Exiting',ignore_silent=True)
 		return
 	
@@ -394,19 +397,19 @@ def main():
 		for theme in themes:
 			file_path = Path(theme["file_path"])
 
-			if file_path.suffix == '.mp3':
+			if file_path.suffix == '.ogg':
 				continue
 
-			mp3_path = Path(file_path).with_suffix(".mp3")
+			new_path = Path(file_path).with_suffix(".ogg")
 
-			if os.path.exists(mp3_path) or not os.path.exists(file_path):
+			if os.path.exists(new_path) or not os.path.exists(file_path):
 				continue
 
-			logprint(f"[main.py] [INFO] Converting {file_path} to mp3")
+			logprint(f"[main.py] [INFO] Converting {file_path} to ogg")
 
-			AudioSegment.from_file(file_path).export(mp3_path, format="mp3")
+			AudioSegment.from_file(file_path).export(new_path, format="ogg")
 			os.remove(file_path)
-			theme["file_path"] = mp3_path
+			theme["file_path"] = new_path
 
 		episode_index = 0
 		while episode_index != None:
@@ -417,15 +420,6 @@ def main():
 			for episode in episodes:
 				video_path = episode["video_path"]
 
-				mp3_path = Path(video_path).with_suffix(".mp3")
-
-				if not os.path.exists(video_path) and os.path.exists(mp3_path):
-					new_episode_list.append({
-						"episode_number": episode['episode_number'],
-						"mp3_path": mp3_path
-					})
-					continue
-
 				# Attempt parse any chapters the video file might have
 				found_timestamps = chapters.parse_chapters(video_path, anidb_id, episode['episode_number'], themes)
 				if found_timestamps and -1 not in [found_timestamps['opening']['start'],found_timestamps['opening']['end'],
@@ -434,14 +428,10 @@ def main():
 					os.remove(video_path)
 					continue
 
-				logprint(f"[main.py] [INFO] Converting {video_path} to mp3")
-
-				AudioSegment.from_file(video_path).export(mp3_path, format="mp3")
 				new_episode_list.append({
 					"episode_number": episode['episode_number'],
-					"mp3_path": mp3_path
+					"video_path": video_path
 				})
-				os.remove(video_path)
 			
 			if len(new_episode_list) == 0:
 				logprint(f"[main.py] [INFO] Episode batch {episode_index} for \"{kitsu_title}\" does not need to be fingerprinted")
