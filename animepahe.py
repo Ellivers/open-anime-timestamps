@@ -90,7 +90,7 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
       return (episode_files, i)
 
     if any(e['episode_number'] == episode_number and not (e['op'] or e['ed']) for e in requirements):
-      logprint(f"[animepahe.py] [INFO] Opening and ending timestamps for episode {episode_number} are already defined. Skipping")
+      logprint(f"[animepahe.py] [INFO] Findable timestamps for episode {episode_number} are already defined. Skipping")
       continue
 
     logprint(f"[animepahe.py] [INFO] Getting download link for episode {episode_number}")

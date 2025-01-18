@@ -101,7 +101,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 				if 'open_anime_timestamps' not in timestamp_data['sources']:
 					timestamp_data['sources'].append('open_anime_timestamps')
 			else:
-				logprint("[fingerprint.py] [INFO] No matches found for opening")
+				logprint("[fingerprint.py] [INFO] No good match found for opening")
 		
 		if add_method != 'update_op' and ending_count > 0:
 			logprint(f"[fingerprint.py] [INFO] Checking episode {episode_number} audio for ending")
@@ -117,7 +117,7 @@ def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
 				if 'open_anime_timestamps' not in timestamp_data['sources']:
 					timestamp_data['sources'].append('open_anime_timestamps')
 			else:
-				logprint("[fingerprint.py] [INFO] No matches found for ending")
+				logprint("[fingerprint.py] [INFO] No good match found for ending")
 
 		os.remove(episode["video_path"])
 

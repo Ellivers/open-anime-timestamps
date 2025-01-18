@@ -350,14 +350,14 @@ def main():
 			logprint(f"[main.py] [INFO] No themes to get from \"{kitsu_title}\". Skipping")
 			continue
 
+		openings = [t for t in themes if "OP" in t['type']]
+		endings = [t for t in themes if "ED" in t['type']]
+
 		# Make sure that existing timestamps for this series have ends marked
 		# I'll remove this when all fixable timestamps have been fixed
 		if len(series) > 0 and \
 			any((ep['opening']['start'] != -1 and ep['opening']['end'] == -1) or (ep['ending']['start'] != -1 and ep['ending']['end'] == -1) for ep in series):
 			local_database_file = open("timestamps.json", "r+")
-
-			openings = [t for t in themes if "OP" in t['type']]
-			endings = [t for t in themes if "ED" in t['type']]
 
 			# All OPs and EDs have to have the same duration for this to work
 			# This is because multiple durations would make the timestamp data inaccurate
@@ -384,16 +384,14 @@ def main():
 			local_database_file.truncate()
 			local_database_file.close()
 
-		####
-		# This is also to be deleted
+		# Re-check requirements, since openings and endings might not be available
 		requirements = []
 		for ep in series:
 			requirements.append({
 				"episode_number": ep['episode_number'],
-				"op": ep['opening']['start'] == -1 or ep['opening']['end'] == -1,
-				"ed": ep['ending']['start'] == -1 or ep['ending']['end'] == -1
+				"op": len(openings) > 0 and (ep['opening']['start'] == -1 or ep['opening']['end'] == -1),
+				"ed": len(endings) > 0 and (ep['ending']['start'] == -1 or ep['ending']['end'] == -1)
 			})
-		####
 
 		for theme in themes:
 			file_path = Path(theme["file_path"])
