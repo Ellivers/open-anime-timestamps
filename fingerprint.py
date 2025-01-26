@@ -30,13 +30,13 @@ endings_dejavu = Dejavu(endings_database_cfg)
 endings_recognizer = FileRecognizer(endings_dejavu)
 
 def fingerprint_episodes(anidb_id: str, episodes: list[dict]):
-	logprint("[fingerprint.py] [INFO] Adding openings to fingerprint database")
+	if len(os.listdir('openings')) > 0:
+		logprint("[fingerprint.py] [INFO] Adding openings to fingerprint database")
+		openings_dejavu.fingerprint_directory("openings", [".ogg"])
 
-	openings_dejavu.fingerprint_directory("openings", [".ogg"])
-
-	logprint("[fingerprint.py] [INFO] Adding endings to fingerprint database")
-
-	endings_dejavu.fingerprint_directory("endings", [".ogg"])
+	if len(os.listdir('endings')) > 0:
+		logprint("[fingerprint.py] [INFO] Adding endings to fingerprint database")
+		endings_dejavu.fingerprint_directory("endings", [".ogg"])
 
 	# Clear the ending/opening folders after done
 	logprint("[fingerprint.py] [INFO] Clearing openings folder")
