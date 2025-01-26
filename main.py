@@ -16,7 +16,6 @@ import animethemesmoe
 import animepahe
 import fingerprint
 import chapters
-import math
 import myanimelist
 import shutil
 from utils import logprint, get_timestamp_template, merge_timestamps
@@ -363,10 +362,14 @@ def main():
 			# This is because multiple durations would make the timestamp data inaccurate
 			op_duration = -1
 			ed_duration = -1
-			if len(openings) > 0 and all(round(t['duration']) == round(openings[0]['duration']) for t in openings):
-				op_duration = math.floor(openings[0]['duration'])
-			if len(endings) > 0 and all(round(t['duration']) == round(endings[0]['duration']) for t in endings):
-				ed_duration = math.floor(endings[0]['duration'])
+			if len(openings) > 0:
+				first_duration = openings[0]['duration']
+				if all(abs(t['duration'] - first_duration) <= 1 for t in openings):
+					op_duration = int(first_duration)
+			if len(endings) > 0:
+				first_duration = endings[0]['duration']
+				if all(abs(t['duration'] - first_duration) <= 1 for t in endings):
+					ed_duration = int(first_duration)
 			
 			for ep in series:
 				start = ep['opening']['start']
