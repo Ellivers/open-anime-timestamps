@@ -297,6 +297,7 @@ def main():
 		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\" with ID {anidb_id}")
 
 		if len(total_episodes) == 0:
+			logprint("[main.py] [WARNING] No episodes found. Skipping")
 			continue
 		
 		if anidb_id not in local_database:

@@ -119,6 +119,9 @@ def get_episode_list_page(anime_session: str, page: int) -> list[dict]:
 def get_episode_list(anime_session: str) -> list[dict]:
   response = get_episode_list_page(anime_session, 1)
 
+  if response['total'] == 0:
+    return []
+  
   episode_list = response["data"]
 
   if response["last_page"] == 1:
