@@ -146,7 +146,7 @@ def get_themes(name: str, anidb_id: str|int, kitsu_id: int|str) -> list[dict]:
 		if len(external_kitsu_id) == 0 or external_kitsu_id[0] != int(kitsu_id):
 			continue
 		for t in anime['animethemes']:
-			if len(t['videos']) == 0:
+			if len(t["animethemeentries"][0]['videos']) == 0:
 				continue
 			themes.append(t)
 		break
