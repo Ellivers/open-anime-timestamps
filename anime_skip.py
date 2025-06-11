@@ -69,7 +69,7 @@ def parse_timestamps(timestamps: list, episode_number: float) -> dict:
 	# only taking a subset of them
 	# "Canon" type means resuming from something else, like at the end of an opening
 
-	timestamps.sort(lambda t: float(t["at"]))
+	timestamps.sort(key=lambda t: float(t["at"]))
 	
 	ongoing_type = None
 

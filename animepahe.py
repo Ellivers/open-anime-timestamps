@@ -2,7 +2,6 @@ from pathlib import Path
 import requests
 import urllib.parse
 import re
-import requests
 import time
 import os
 import args
