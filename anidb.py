@@ -27,8 +27,8 @@ def update_title_cache():
 
 def can_download() -> bool:
 	if os.path.isfile(ANIME_DATA_PATH) and os.access(ANIME_DATA_PATH, os.R_OK):
-		# Only update the file once an hour
+		# Only update the file once every 5 hours
 		update_time = os.path.getmtime(ANIME_DATA_PATH)
-		return ((time.time() - update_time) > 3600)
+		return ((time.time() - update_time) > (3600 * 5))
 	else:
 		return True

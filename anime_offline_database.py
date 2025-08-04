@@ -63,9 +63,9 @@ def update_id_database():
 
 def can_download() -> bool:
 	if os.path.isfile(PATH) and os.access(PATH, os.R_OK):
-		# Only update the file once an hour
+		# Only update the file once every 5 hours
 		update_time = os.path.getmtime(PATH)
-		return ((time.time() - update_time) > 3600)
+		return ((time.time() - update_time) > (3600 * 5))
 	else:
 		return True
 
