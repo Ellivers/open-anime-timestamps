@@ -172,10 +172,18 @@ def get_episode_download(anime_session: str, episode_session: str) -> str:
   play_page_url = URL_BASE + f'/play/{anime_session}/{episode_session}'
   play_page_html = get_play_page_html(play_page_url)
 
-  redirect_url = DL_REDIRECT_SELECTOR(play_page_html)[0].attrib['href']
-  redirect_html_text = requests.get(redirect_url,cookies=COOKIES).text
-
-  dl_page_url = DL_PAGE_URL_REGEX.findall(redirect_html_text)[0] # Find the URL to the download page inside the redirection page
+  redirect_elements = DL_REDIRECT_SELECTOR(play_page_html)
+  dl_page_url = None
+  for elem in redirect_elements:
+    redirect_html_text = requests.get(elem.attrib['href'],cookies=COOKIES).text
+    dl_page_url = DL_PAGE_URL_REGEX.findall(redirect_html_text) # Find the URL to the download page inside the redirection page
+    if len(dl_page_url) == 0:
+      dl_page_url = None
+      logprint(f"[animepahe.py] [WARNING] Could not get download page url from redirect link. Trying next")
+    else:
+      dl_page_url = dl_page_url[0]
+      break
+  
   dl_page_response = requests.get(dl_page_url,cookies=COOKIES)
   dl_page_html_text = dl_page_response.text
 
