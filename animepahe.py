@@ -95,6 +95,10 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
     logprint(f"[animepahe.py] [INFO] Getting download link for episode {episode_number}")
     source = get_episode_download(anime_session, episode["session"])
 
+    if source == None:
+      logprint(f"[animepahe.py] [WARNING] Couldn't get video download URL for episode {episode_number}")
+      continue
+
     video_path, file_size = download_episode(source)
     current_download_size += file_size
 
@@ -176,14 +180,17 @@ def get_episode_download(anime_session: str, episode_session: str) -> str:
   dl_page_url = None
   for elem in redirect_elements:
     redirect_html_text = requests.get(elem.attrib['href'],cookies=COOKIES).text
-    dl_page_url = DL_PAGE_URL_REGEX.findall(redirect_html_text) # Find the URL to the download page inside the redirection page
-    if len(dl_page_url) == 0:
-      dl_page_url = None
+    dl_page_results = DL_PAGE_URL_REGEX.findall(redirect_html_text) # Find the URL to the download page inside the redirection page
+    if len(dl_page_results) == 0:
       logprint(f"[animepahe.py] [WARNING] Could not get download page url from redirect link. Trying next")
-    else:
-      dl_page_url = dl_page_url[0]
-      break
+      continue
+
+    dl_page_url = dl_page_results[0]
+    break
   
+  if not dl_page_url:
+    return None
+
   dl_page_response = requests.get(dl_page_url,cookies=COOKIES)
   dl_page_html_text = dl_page_response.text
 
