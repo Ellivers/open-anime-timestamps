@@ -6,7 +6,7 @@ import requests
 import json
 from utils import logprint
 
-URL = "https://raw.githubusercontent.com/manami-project/anime-offline-database/master/anime-offline-database.json"
+URL = "https://github.com/manami-project/anime-offline-database/releases/download/latest/anime-offline-database-minified.json"
 PATH = "./anime-offline-database-processed.json"
 
 def update_id_database():
