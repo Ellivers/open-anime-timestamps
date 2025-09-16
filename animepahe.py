@@ -11,7 +11,7 @@ import math
 from lxml import etree, cssselect
 from utils import is_not_silent, logprint
 
-URL_BASE = "https://animepahe.ru"
+URL_BASE = "https://animepahe.si"
 URL_API_BASE = URL_BASE + "/api?m="
 
 MAX_RETRY_COUNT = args.parsed_args.scrape_max_retry or 10
