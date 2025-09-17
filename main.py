@@ -314,12 +314,21 @@ def main():
 			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
 			continue
 
+		skip_known = args.parsed_args.skip_known
 		requirements = []
 		for ep in series:
+			op = -1 in [ep['opening']['start'], ep['opening']['end']]
+			ed = -1 in [ep['ending']['start'], ep['ending']['end']]
+			if skip_known:
+				if op and ep['opening']['start'] == -1 and ep['opening']['end'] == -1:
+					op = False
+				if ed and ep['ending']['start'] == -1 and ep['ending']['end'] == -1:
+					ed = False
+
 			requirements.append({
 				"episode_number": ep['episode_number'],
-				"op": ep['opening']['start'] == -1 or ep['opening']['end'] == -1,
-				"ed": ep['ending']['start'] == -1 or ep['ending']['end'] == -1
+				"op": op,
+				"ed": ed
 			})
 
 		# Check if op/ed timestamps are already defined
@@ -389,13 +398,14 @@ def main():
 			local_database_file.close()
 
 		# Re-check requirements, since openings and endings might not be available
-		requirements = []
 		for ep in series:
-			requirements.append({
-				"episode_number": ep['episode_number'],
-				"op": len(openings) > 0 and (ep['opening']['start'] == -1 or ep['opening']['end'] == -1),
-				"ed": len(endings) > 0 and (ep['ending']['start'] == -1 or ep['ending']['end'] == -1)
-			})
+			req = next(req for req in requirements if req['episode_number'] == ep['episode_number'])
+			if not req:
+				continue
+			if len(openings) == 0 or (ep['opening']['start'] != -1 and ep['opening']['end'] != -1):
+				req['op'] = False
+			if len(endings) == 0 or (ep['ending']['start'] != -1 and ep['ending']['end'] != -1):
+				req['ed'] = False
 
 		for theme in themes:
 			file_path = Path(theme["file_path"])
