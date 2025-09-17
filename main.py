@@ -120,10 +120,14 @@ def main():
 	# Pull timestamps from other databases first
 	if not args.parsed_args.skip_aggregation:
 		start_index = 0
-		if args.parsed_args.aggregation_start != None:
-			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.aggregation_start), 0)
+		start_arg = args.parsed_args.aggregation_start
+
+		if start_arg != None:
+			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) >= start_arg), 0)
 		
 		logprint(f"[main.py] [INFO] Finding timestamps from anime-skip and bettervrv")
+		if start_arg != None and start_index != start_arg:
+			logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {anime_titles[start_index]['id']} instead.")
 
 		for anime in anime_titles[start_index:]:
 			anidb_id = str(anime["id"])
@@ -271,8 +275,13 @@ def main():
 
 	# Scrape other timestamps
 	start_index = 0
-	if args.parsed_args.scrape_start != None:
-		start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) == args.parsed_args.scrape_start), 0)
+	start_arg = args.parsed_args.scrape_start
+	if start_arg != None:
+		start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) >= start_arg), 0)
+	
+	logprint(f"[main.py] [INFO] Scraping timestamps from videos")
+	if start_arg != None and start_index != start_arg:
+		logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {anime_titles[start_index]['id']} instead.")
 
 	for anime in anime_titles[start_index:]:
 		anidb_id = str(anime["id"])
