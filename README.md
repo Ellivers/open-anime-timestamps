@@ -66,6 +66,8 @@ $ python3 main.py [arguments]
 |`--help`                       | `-h`         | Show the help dialog                                                           |
 |`--silent`                     | `-s`         | Disable logging                                                                |
 |`--skip-aggregation`           | `-sa`        | Skips the first loop that aggregates timestamps from other databases           |
+|`--skip-known`                 | `-sk`        | Skips scraping episodes that are known to exist, even if their timestamps are  undefined |
+|`--skip-movies`                | `-sm`        | Skips episodes that are considered movies (>40 minutes long)                   |
 |`--aggregation-start-id VALUE` | `-asi VALUE` | Set the start ID for the first, aggregation, loop                              |
 |`--scrape-start-id VALUE`      | `-ssi VALUE` | Set the start ID for the second, scraping, loop                                |
 |`--scrape-max-retry VALUE`     | `-smr VALUE` | Change the max retry count for episode scraping. Default 10                    |

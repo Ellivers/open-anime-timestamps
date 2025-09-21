@@ -1,4 +1,5 @@
 import args
+import ffmpeg
 
 def is_not_silent() -> bool:
 	return not args.parsed_args.silent
@@ -6,6 +7,11 @@ def is_not_silent() -> bool:
 def logprint(message: str, ignore_silent=False):
   if is_not_silent() or ignore_silent:
     print(message)
+
+def get_media_duration(path) -> float:
+	info: dict = ffmpeg.probe(path)
+	duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
+	return float(duration)
 
 def get_timestamp_template(episode_number, source:str = None):
   data = {

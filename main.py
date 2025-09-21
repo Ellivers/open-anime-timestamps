@@ -124,10 +124,11 @@ def main():
 
 		if start_arg != None:
 			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) >= start_arg), 0)
+			start_id = anime_titles[start_index]['id']
 		
 		logprint(f"[main.py] [INFO] Finding timestamps from anime-skip and bettervrv")
-		if start_arg != None and start_index != start_arg:
-			logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {anime_titles[start_index]['id']} instead.")
+		if start_arg != None and start_arg != start_id:
+			logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {start_id} instead.")
 
 		for anime in anime_titles[start_index:]:
 			anidb_id = str(anime["id"])
@@ -278,10 +279,11 @@ def main():
 	start_arg = args.parsed_args.scrape_start
 	if start_arg != None:
 		start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) >= start_arg), 0)
+		start_id = anime_titles[start_index]['id']
 	
 	logprint(f"[main.py] [INFO] Scraping timestamps from videos")
-	if start_arg != None and start_index != start_arg:
-		logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {anime_titles[start_index]['id']} instead.")
+	if start_arg != None and start_arg != start_id:
+		logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {start_id} instead.")
 
 	for anime in anime_titles[start_index:]:
 		anidb_id = str(anime["id"])

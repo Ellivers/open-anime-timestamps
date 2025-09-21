@@ -9,7 +9,7 @@ from tqdm import tqdm
 import args
 import math
 from lxml import etree, cssselect
-from utils import is_not_silent, logprint
+from utils import is_not_silent, logprint, get_media_duration
 
 URL_BASE = "https://animepahe.si"
 URL_API_BASE = URL_BASE + "/api?m="
@@ -100,11 +100,19 @@ def download_episodes(anime_session: str, full_episode_list: list, requirements:
       continue
 
     video_path, file_size = download_episode(source)
-    current_download_size += file_size
 
     if video_path == None:
       logprint(f"[animepahe.py] [WARNING] Couldn't get video path for episode {episode_number}")
       continue
+
+    if args.parsed_args.skip_movies:
+      duration = get_media_duration(video_path)
+      if duration > (60 * 40): # >40 minutes
+        os.remove(video_path)
+        logprint(f"[animepahe.py] [INFO] Skipped episode {episode_number} due to length (skip-movies)")
+        continue
+
+    current_download_size += file_size
 
     episode_files.append({
       # Subsequent seasons' episode numbers start from the previous season's last number,

@@ -5,12 +5,11 @@ from pathlib import Path
 import time
 
 from fingerprint import get_fingerprinted_songs, get_song_by_id
-import ffmpeg
 import requests
 import urllib.parse
 from tqdm import tqdm
 
-from utils import is_not_silent, logprint
+from utils import is_not_silent, logprint, get_media_duration
 
 def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download: list[str]) -> list[dict]:
 	themes = get_themes(name, anidb_id, kitsu_id)
@@ -63,9 +62,7 @@ def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download
 		if Path.exists(Path(audio_path)):
 			logprint(f"[animethemesmoe.py] [INFO] {file_name} has already been downloaded. Skipping")
 
-			info: dict = ffmpeg.probe(audio_path)
-			duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
-
+			duration = get_media_duration(audio_path)
 			themes_list.append({
 				"file_path": audio_path,
 				"duration": float(duration),
@@ -103,9 +100,7 @@ def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download
 
 		audio_file.close()
 
-		info: dict = ffmpeg.probe(audio_path)
-		duration = info.get('format',{}).get('duration') or info.get('streams',[{}])[0].get('duration')
-
+		duration = get_media_duration(audio_path)
 		themes_list.append({
 			"file_path": audio_path,
 			"duration": float(duration),

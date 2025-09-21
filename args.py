@@ -5,6 +5,7 @@ parser = argparse.ArgumentParser(description="Create a database of anime theme t
 parser.add_argument("-s", "--silent", dest="silent", action="store_true", help="disable logging")
 parser.add_argument("-sa", "--skip-aggregation", dest="skip_aggregation", action="store_true", help="skips the first loop that aggregates timestamps from other databases")
 parser.add_argument("-sk", "--skip-known", dest="skip_known", action="store_true", help="skips episodes that are already stored in the database")
+parser.add_argument("-sm", "--skip-movies", dest="skip_movies", action="store_true", help="skips movie entries (>40 minutes long)")
 parser.add_argument("-asi", "--aggregation-start-id", dest="aggregation_start", type=int, help="set the start ID for the first, aggregation, loop")
 parser.add_argument("-ssi", "--scrape-start-id", dest="scrape_start", type=int, help="set the start ID for the second, scraping, loop")
 parser.add_argument("-smr", "--scrape-max-retry", dest="scrape_max_retry", type=int, help="change the max retry count for episode scraping. Default 10")
