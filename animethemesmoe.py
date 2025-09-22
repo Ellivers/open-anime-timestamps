@@ -141,9 +141,8 @@ def get_themes(name: str, anidb_id: str|int, kitsu_id: int|str) -> list[dict]:
 		if len(external_kitsu_id) == 0 or external_kitsu_id[0] != int(kitsu_id):
 			continue
 		for t in anime['animethemes']:
-			if len(t["animethemeentries"][0]['videos']) == 0:
-				continue
-			themes.append(t)
+			if len(t["animethemeentries"]) and len(t["animethemeentries"][0]['videos']):
+				themes.append(t)
 		break
 	
 	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for {name} with ID {anidb_id}")

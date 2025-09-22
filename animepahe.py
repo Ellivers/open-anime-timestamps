@@ -25,7 +25,7 @@ ANIDB_ID_REGEX = re.compile(r'//anidb.net/anime/(\d+)')
 DL_PAGE_URL_REGEX = re.compile(r'https:\/\/kwik.\w+\/f\/[^"]+')
 FORM_HTML_PARAMS_REGEX = re.compile(r'\(\"(\w+)\",\d+,\"(\w+)\",(\d+),(\d+),\d+\)')
 
-COOKIES = {"__ddg1_": "ghqix2xda4k1YXM8znC6", "__ddg2_": "kC5TSLlx7Md9Ua6A"}
+COOKIES = {"__ddg1_": "RmqGd2L0vTt99oWclUWc", "__ddg2_": "9or8WPBq08IUnAb5"}
 
 CHAR_MAP_DIGITS = "0123456789"
 CHAR_MAP_BASE = 10
