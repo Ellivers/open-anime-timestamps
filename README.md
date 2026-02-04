@@ -52,6 +52,8 @@ You will also need to create two MySQL databases and set up `config.json`. An ex
 }
 ```
 
+If you are getting errors about a `fromstring` function, try downgrading numpy. Version 2.0.0 has been tested to work.
+
 # Installation (Dejavu)
 The above SHOULD work to install all dependencies needed to install Dejavu on Ubuntu 20.04 and Windows 10. Dejavu is somewhat annoying to install, you may have to manually install some packages or package versions for your setup. If you need help, refer to the Dejavu repo https://github.com/worldveil/dejavu/ or the updated fork that Open Anime Timestamps uses https://github.com/JPery/dejavu
 
@@ -81,6 +83,7 @@ Acoustic fingerprinting and aggregating data from other databases. A database of
 The fingerprinting library used here is Dejavu. This process takes a good amount of RAM to run. Open Anime Timestamps was tested on:
 - Ubuntu 20.04 running Python 3.8
 - Windows 10 running Python 3.11.9 and Python 3.10
+- Fedora 43 running Python 3.11.14
 
 # Database format
 The "database" right now is just a plain json file. Each key is the AniDB ID for the series. Using MAL, Kitsu, or Anilist for IDs? Use an API like https://relations.yuna.moe/ to convert these IDs to AniDB IDs. Each value is an array of objects containing the source of the timestamp, episode number, opening start and end, ending start and end, beginning recap start and end, and ending "next episode" preview start (all in seconds). Not each episode will have every timestamp, `-1` in a value means not found/missing timestamp.
