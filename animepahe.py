@@ -225,7 +225,7 @@ def download_episode(source: str) -> tuple[str, int]:
     logprint(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
     return (video_path, os.path.getsize(video_path))
 
-  initial_response = requests.head(source)
+  initial_response = requests.head(source, headers={"Referer": "https://kwik.cx/"})
 
   if initial_response.status_code != 200:
     logprint(f"[animepahe.py] [WARNING] Episode {source} not reachable! (status code {initial_response.status_code})")
@@ -242,7 +242,7 @@ def download_episode(source: str) -> tuple[str, int]:
 
   while downloaded_bytes < content_length:
     try:
-      response = requests.get(source, timeout=5, stream=True, headers={"Range": "bytes=%d-" % downloaded_bytes})
+      response = requests.get(source, timeout=5, stream=True, headers={"Range": "bytes=%d-" % downloaded_bytes, "Referer": "https://kwik.cx/"})
       for chunk in response.iter_content(chunk_size=1024*1024):
         chunk_len = len(chunk)
         downloaded_bytes += chunk_len
