@@ -225,11 +225,18 @@ def download_episode(source: str) -> tuple[str, int]:
     logprint(f"[animepahe.py] [INFO] {file_name} has already been downloaded. Skipping")
     return (video_path, os.path.getsize(video_path))
 
-  initial_response = requests.head(source, headers={"Referer": "https://kwik.cx/"})
+  for i in range(1,MAX_RETRY_COUNT+1):
+    initial_response = requests.head(source, headers={"Referer": "https://kwik.cx/"})
 
-  if initial_response.status_code != 200:
-    logprint(f"[animepahe.py] [WARNING] Episode {source} not reachable! (status code {initial_response.status_code})")
-    return (None,0)
+    if initial_response.status_code != 200:
+      logprint(f"[animepahe.py] [WARNING] Episode {source} not reachable! (status code {initial_response.status_code})")
+      if i >= MAX_RETRY_COUNT or initial_response.status_code != 522:
+        return (None,0)
+      else:
+        logprint(f"[animepahe.py] [INFO] Retrying in one second ({i}/{MAX_RETRY_COUNT})")
+        time.sleep(1)
+    else:
+      break
 
   content_length = int(initial_response.headers["content-length"] or 0)
   video_file = open(video_path, "wb")
