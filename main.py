@@ -311,6 +311,10 @@ def main():
 			logprint("[main.py] [WARNING] No episodes found. Skipping")
 			continue
 		
+		local_database_file = open("timestamps.json", "r")
+		local_database = json.load(local_database_file)
+		local_database_file.close()
+
 		if anidb_id not in local_database:
 			local_database[anidb_id] = []
 
@@ -377,7 +381,6 @@ def main():
 		# I'll remove this when all fixable timestamps have been fixed
 		if len(series) > 0 and \
 			any((ep['opening']['start'] != -1 and ep['opening']['end'] == -1) or (ep['ending']['start'] != -1 and ep['ending']['end'] == -1) for ep in series):
-			local_database_file = open("timestamps.json", "r+")
 
 			# All OPs and EDs have to have the same duration for this to work
 			# This is because multiple durations would make the timestamp data inaccurate
@@ -403,6 +406,7 @@ def main():
 					logprint(f"[main.py] [INFO] Completed ending timestamp for episode {ep['episode_number']}")
 					ep['ending']['end'] = start + ed_duration
 			
+			local_database_file = open("timestamps.json", "r+")
 			local_database_file.seek(0)
 			json.dump(local_database, local_database_file, indent=4)
 			local_database_file.truncate()
