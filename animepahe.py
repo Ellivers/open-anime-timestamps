@@ -15,6 +15,8 @@ URL_BASE = "https://animepahe.si"
 URL_API_BASE = URL_BASE + "/api?m="
 
 MAX_RETRY_COUNT = args.parsed_args.scrape_max_retry or 10
+if MAX_RETRY_COUNT < 1:
+  MAX_RETRY_COUNT = 1
 
 EXTERNAL_LINKS_SELECTOR = cssselect.CSSSelector('.external-links a')
 DL_REDIRECT_SELECTOR = cssselect.CSSSelector('#pickDownload a')
