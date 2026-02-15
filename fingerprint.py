@@ -1,16 +1,3 @@
-##########################################################
-# Monkey patch for getting Dejabu running on Python 3.8+ #
-#    (platform.linux_distribution was removed in 3.8)    #
-import platform
-try:
-	import distro
-	def linux_distribution():
-		return [distro.like()]
-	platform.linux_distribution = linux_distribution
-except ImportError:
-	pass
-##########################################################
-
 from utils import logprint, get_timestamp_template
 import json
 import glob
