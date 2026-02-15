@@ -23,8 +23,26 @@ Open Anime Timestamps is an automated tool that tries to find where certain musi
 - ffmpeg
 
 # Installation
-```bash$
+
+Ubuntu (untested):
+```bash
 $ sudo apt-get install python3-dev libmysqlclient-dev python3-numpy python3-matplotlib ffmpeg portaudio19-dev
+```
+
+Fedora:
+```bash
+$ sudo dnf install python3.11-devel python3-pip community-mysql-server python3-numpy python3-matplotlib ffmpeg python3-numpy
+```
+
+I recommend setting up a virtual environment:
+```bash
+$ python3.11 -m venv .venv
+$ source .venv/bin/activate
+$ pip install -r requirements.txt
+```
+
+Otherwise, just install requirements normally:
+```bash
 $ pip3 install -r requirements.txt
 ```
 
@@ -52,14 +70,16 @@ You will also need to create two MySQL databases and set up `config.json`. An ex
 }
 ```
 
-If you are getting errors about a `fromstring` function, try downgrading numpy. Version 2.0.0 has been tested to work.
-
 # Installation (Dejavu)
-The above SHOULD work to install all dependencies needed to install Dejavu on Ubuntu 20.04 and Windows 10. Dejavu is somewhat annoying to install, you may have to manually install some packages or package versions for your setup. If you need help, refer to the Dejavu repo https://github.com/worldveil/dejavu/ or the updated fork that Open Anime Timestamps uses https://github.com/JPery/dejavu
+The above *should* work to install all dependencies needed to install Dejavu on Ubuntu 20.04 and Fedora 43. Dejavu is somewhat annoying to install, you may have to manually install some packages or package versions for your setup. If you need help, refer to the Dejavu repo https://github.com/worldveil/dejavu/ or the updated fork that Open Anime Timestamps uses, https://github.com/JPery/dejavu.
 
 # Usage
+
 ```bash
-$ python3 main.py [arguments]
+# With virtual environment:
+$ python main.py [arguments]
+# Without:
+$ python3.11 main.py [arguments]
 ```
 
 # Arguments
@@ -86,7 +106,10 @@ The fingerprinting library used here is Dejavu. This process takes a good amount
 - Fedora 43 running Python 3.11.14
 
 # Database format
-The "database" right now is just a plain json file. Each key is the AniDB ID for the series. Using MAL, Kitsu, or Anilist for IDs? Use an API like https://relations.yuna.moe/ to convert these IDs to AniDB IDs. Each value is an array of objects containing the source of the timestamp, episode number, opening start and end, ending start and end, beginning recap start and end, and ending "next episode" preview start (all in seconds). Not each episode will have every timestamp, `-1` in a value means not found/missing timestamp.
+The "database" right now is just a plain json file. Each key is the AniDB ID for the series. Using MAL, Kitsu, or Anilist for IDs? Use an API like https://relations.yuna.moe/ to convert these IDs to AniDB IDs.
+
+Each value is an array of objects containing the source of the timestamp, episode number, opening start and end, ending start and end, beginning recap start and end, and ending "next episode" preview start (all in seconds). Not each episode will have every timestamp, `-1` in a value means not found/missing timestamp.
+
 ```json
 {
 	"1": [
@@ -168,7 +191,6 @@ The "database" right now is just a plain json file. Each key is the AniDB ID for
 
 # TODO
 - [ ] Speed this thing up. Right now it takes FOREVER to scrape
-- [x] Add opening/ending length times for easier skipping
 - [ ] Add more sources for episodes? gogoanime might be viable
 - [ ] Better comments
 - [ ] Clean up the code
