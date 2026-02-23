@@ -21,7 +21,7 @@ if MAX_RETRY_COUNT < 1:
 EXTERNAL_LINKS_SELECTOR = cssselect.CSSSelector('.external-links a')
 DL_REDIRECT_SELECTOR = cssselect.CSSSelector('#pickDownload a')
 
-FILENAME_REGEX = re.compile(r'\w{64}\?file=(.+\.mp4)')
+FILENAME_REGEX = re.compile(r'\w{32}\?file=(.+\.mp4)')
 
 ANIDB_ID_REGEX = re.compile(r'//anidb.net/anime/(\d+)')
 DL_PAGE_URL_REGEX = re.compile(r'https:\/\/kwik.\w+\/f\/[^"]+')
