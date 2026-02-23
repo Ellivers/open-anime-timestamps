@@ -196,15 +196,21 @@ def get_episode_download(anime_session: str, episode_session: str) -> str:
       continue
 
     dl_page_url = dl_page_results[0]
+
+    dl_page_response = requests.get(dl_page_url,cookies=COOKIES)
+    dl_page_html_text = dl_page_response.text
+
+    form_params_search = FORM_HTML_PARAMS_REGEX.findall(dl_page_html_text)
+    if len(form_params_search) == 0:
+      logprint(f"[animepahe.py] [WARNING] Could not get download from page. Trying next redirect")
+      continue
+    form_params = form_params_search[0]
     break
   
-  if not dl_page_url:
+  if not dl_page_url or not form_params:
+    logprint(f"[animepahe.py] [WARNING] No valid downloads found. Skipping episode")
     return None
 
-  dl_page_response = requests.get(dl_page_url,cookies=COOKIES)
-  dl_page_html_text = dl_page_response.text
-
-  form_params = FORM_HTML_PARAMS_REGEX.findall(dl_page_html_text)[0]
   form_html = etree.HTML(decrypt_post_form(form_params[0],form_params[1],int(form_params[2]),int(form_params[3])))
 
   post_url = None
