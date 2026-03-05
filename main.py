@@ -69,6 +69,7 @@ def main():
 					logprint(f"[main.py] [WARNING] Skipping episode with invalid number {episode_number}")
 					continue
 
+				# Reset timestamps that only have defined ends
 				if 'recap' in ep and ep['recap'].get('end',-1) != -1 and ep['recap'].get('start',-1) == -1:
 					ep['recap']['start'] = 0
 				if 'opening' in ep and ep['opening'].get('end',-1) != -1 and ep['opening'].get('start',-1) == -1:
@@ -76,6 +77,7 @@ def main():
 				if 'ending' in ep and ep['ending'].get('end',-1) != -1 and ep['ending'].get('start',-1) == -1:
 					ep['ending']['start'] = 0
 
+				# Reset timestamps that have a start number greater than the end number
 				if ep['recap']['start'] > ep['recap']['end'] and ep['recap']['end'] != -1:
 					logprint(f"[main.py] [WARNING] Clearing recap timestamps with 'start' greater than 'end' (episode {episode_number} series {key})")
 					ep['recap']['start'] = -1
@@ -86,6 +88,20 @@ def main():
 					ep['opening']['end'] = -1
 				if ep['ending']['start'] > ep['ending']['end'] and ep['ending']['end'] != -1:
 					logprint(f"[main.py] [WARNING] Clearing ending timestamps with 'start' greater than 'end' (episode {episode_number} series {key})")
+					ep['ending']['start'] = -1
+					ep['ending']['end'] = -1
+
+				# Reset timestamps that are negative (-2 is valid to mark that no timestamp is supposed to exist)
+				if ep['recap']['start'] < -2 or ep['recap']['end'] < -2:
+					logprint(f"[main.py] [WARNING] Clearing recap timestamps with negative 'start' and/or 'end' (episode {episode_number} series {key})")
+					ep['recap']['start'] = -1
+					ep['recap']['end'] = -1
+				if ep['opening']['start'] < -2 or ep['opening']['end'] < -2:
+					logprint(f"[main.py] [WARNING] Clearing opening timestamps with negative 'start' and/or 'end' (episode {episode_number} series {key})")
+					ep['opening']['start'] = -1
+					ep['opening']['end'] = -1
+				if ep['ending']['start'] < -2 or ep['ending']['end'] < -2:
+					logprint(f"[main.py] [WARNING] Clearing ending timestamps with negative 'start' and/or 'end' (episode {episode_number} series {key})")
 					ep['ending']['start'] = -1
 					ep['ending']['end'] = -1
 
