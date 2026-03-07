@@ -36,12 +36,11 @@ def get_anime_session(name: str, anidb_id: int|str) -> list:
   request = requests.get(URL_API_BASE + "search&q=" + urllib.parse.quote(name.replace(' -',' ')),cookies=COOKIES)
   
   if request.status_code != 200:
-    logprint(f"[animepahe.py] [WARNING] Getting data for \"{name}\" gave status code {request.status_code} (1). Skipping anime.")
+    logprint(f"[animepahe.py] [WARNING] Getting data for \"{name}\" gave status code {request.status_code}.")
     return
 
   search_result = request.json()
   if search_result["total"] == 0:
-    logprint(f"[animepahe.py] [INFO] Found no results for \"{name}\". Skipping anime")
     return
   
   for anime in search_result["data"]:

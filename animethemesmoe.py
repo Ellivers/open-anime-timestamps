@@ -145,6 +145,6 @@ def get_themes(name: str, anidb_id: str|int, kitsu_id: int|str) -> list[dict]:
 				themes.append(t)
 		break
 	
-	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for {name} with ID {anidb_id}")
+	logprint(f"[animethemesmoe.py] [INFO] Found {len(themes)} themes for \"{name}\" with ID {anidb_id}")
 	
 	return themes
