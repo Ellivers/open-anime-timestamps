@@ -187,6 +187,7 @@ def get_episode_download(anime_session: str, episode_session: str) -> str:
 
   redirect_elements = DL_REDIRECT_SELECTOR(play_page_html)
   dl_page_url = None
+  form_params = None
   for elem in redirect_elements:
     redirect_html_text = requests.get(elem.attrib['href'],cookies=COOKIES).text
     dl_page_results = DL_PAGE_URL_REGEX.findall(redirect_html_text) # Find the URL to the download page inside the redirection page
