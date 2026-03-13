@@ -386,6 +386,10 @@ def main():
 
 		themes = animethemesmoe.download_themes(jp_title, anidb_id, kitsu_id, themes_to_download)
 
+		if len(themes) == 0 and jp_title != kitsu_title:
+			logprint(f"[main.py] [WARNING] No themes found for \"{jp_title}\". Trying alternate query")
+			themes = animethemesmoe.download_themes(kitsu_title, anidb_id, kitsu_id, themes_to_download)
+
 		if len(themes) == 0:
 			logprint(f"[main.py] [WARNING] No themes to get from \"{kitsu_title}\". Skipping")
 			continue
@@ -511,6 +515,8 @@ def main():
 		episodes = animixplay.get_episodes(title)
 		fingerprint.fingerprint_episodes(anidb_id, episodes)
 		'''
+	
+	logprint("[main.py] [INFO] Done!")
 
 if __name__ == '__main__':
 	main()
