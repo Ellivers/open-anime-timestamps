@@ -145,3 +145,5 @@ episodes
 openings
 endings
 *.py.swp
+
+test/
