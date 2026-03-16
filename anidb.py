@@ -3,9 +3,11 @@
 import time
 import os
 import requests
+import json
 from utils import logprint
 
-ANIME_DATA_URL = "https://raw.githubusercontent.com/c032/anidb-animetitles-archive/refs/heads/main/data/animetitles.json"
+#ANIME_DATA_URL = "https://raw.githubusercontent.com/c032/anidb-animetitles-archive/refs/heads/main/data/animetitles.json"
+ANIME_DATA_URL = "https://raw.githubusercontent.com/NOBLES5E/anidb-titles/refs/heads/main/animes-titles.json"
 ANIME_DATA_PATH = "./anime-titles.json"
 
 def update_title_cache():
@@ -20,9 +22,22 @@ def update_title_cache():
 		logprint("[anidb.py] [INFO] Failed to get file. Using cached anime-titles.json")
 		return
 	
-	converted_json = "[" + ",\n".join(response.text.splitlines()) + "]"
-	json_file = open(ANIME_DATA_PATH, "wb")
-	json_file.write(converted_json.encode('utf-8'))
+	#json_file = open(ANIME_DATA_PATH, "wb")
+	#converted_json = "[" + ",\n".join(response.text.splitlines()) + "]"
+	#json_file.write(converted_json.encode('utf-8'))
+
+	converted_json = response.json()
+	for anime in converted_json:
+		anime['id'] = int(anime['aid'])
+		del anime['aid']
+		for lang in anime['titles']:
+			lang['language'] = lang['lang']
+			lang['title'] = lang['text']
+			del lang['lang']
+			del lang['text']
+
+	json_file = open(ANIME_DATA_PATH, "w")
+	json.dump(converted_json, json_file, separators = (',',':'))
 	json_file.close()
 
 def can_download() -> bool:
