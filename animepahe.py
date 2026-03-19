@@ -171,11 +171,15 @@ def decrypt_post_form(full_key: str, key: str, v1: int, v2: int) -> str:
 #
 
 def get_play_page_html(url: str):
+  retries = 0
   try:
     response = requests.get(url,cookies=COOKIES)
   except Exception:
+    retries += 1
+    if retries > MAX_RETRY_COUNT:
+      return None
     # If killed, wait a second
-    logprint(f"[animepahe.py] [WARNING] Error while requesting player page. Trying again in one second")
+    logprint(f"[animepahe.py] [WARNING] Error while requesting player page. Trying again in one second ({retries}/{MAX_RETRY_COUNT} retries)")
     time.sleep(1)
     return get_play_page_html(url)
   
@@ -184,6 +188,9 @@ def get_play_page_html(url: str):
 def get_episode_download(anime_session: str, episode_session: str) -> str:
   play_page_url = URL_BASE + f'/play/{anime_session}/{episode_session}'
   play_page_html = get_play_page_html(play_page_url)
+
+  if play_page_html is None:
+    return None
 
   redirect_elements = DL_REDIRECT_SELECTOR(play_page_html)
   dl_page_url = None
