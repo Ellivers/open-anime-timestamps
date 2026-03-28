@@ -18,7 +18,7 @@ def get_anime_info(id: int) -> dict | None:
 	global anime_info_cache
 	if str(id) in anime_info_cache:
 		return anime_info_cache[str(id)]
-	req = requests.get(f"{API_PATH}/anime/{id}?fields=num_episodes,related_anime", headers=HEADERS)
+	req = requests.get(f"{API_PATH}/anime/{id}?fields=num_episodes,related_anime,title", headers=HEADERS)
 	status_code = req.status_code
 	if status_code != 200:
 		if status_code == 504:

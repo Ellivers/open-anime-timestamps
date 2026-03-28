@@ -305,23 +305,29 @@ def main():
 		anidb_id = str(anime["id"])
 		kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 
-		if not kitsu_id:
-			logprint(f"[main.py] [WARNING] {anidb_id} AniDB ID has no Kitsu ID! Skipping")
-			continue
+		if kitsu_id:
+			kitsu_details = kitsu.details(kitsu_id)
 
-		kitsu_details = kitsu.details(kitsu_id)
+			# animethemes and animepahe use two different main title formats
+			found_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
+			episode_count = kitsu_details['data']['attributes']['episodeCount']
+		else:
+			mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
+			if not mal_id:
+				logprint(f"[main.py] [WARNING] {anidb_id} AniDB ID has no Kitsu or MAL ID! Skipping")
+				continue
 
-		# animethemes and animepahe use two different main title formats
-		kitsu_title = kitsu_details["data"]["attributes"]["canonicalTitle"]
-		episode_count = kitsu_details['data']['attributes']['episodeCount']
+			mal_info = myanimelist.get_anime_info(mal_id)
+			found_title = mal_info['title']
 
-		pahe_session = animepahe.get_anime_session(kitsu_title, anidb_id)
+
+		pahe_session = animepahe.get_anime_session(found_title, anidb_id)
 		if not pahe_session:
 			logprint(f"[main.py] [WARNING] No anime found with ID {anidb_id}. Skipping")
 			continue
 
 		total_episodes = animepahe.get_episode_list(pahe_session)
-		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{kitsu_title}\" with ID {anidb_id}")
+		logprint(f"[main.py] [INFO] Found {len(total_episodes)} episodes for \"{found_title}\" with ID {anidb_id}")
 
 		if len(total_episodes) == 0:
 			logprint("[main.py] [WARNING] No episodes found. Skipping")
@@ -342,7 +348,7 @@ def main():
 				ep2['ending']['start'],ep2['ending']['end']
 			] for ep2 in series) for ep in total_episodes):
 			
-			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
+			logprint(f"[main.py] [INFO] \"{found_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
 			continue
 
 		skip_known = args.parsed_args.skip_known
@@ -373,7 +379,7 @@ def main():
 				themes_to_download.append('ed')
 
 		if len(themes_to_download) == 0:
-			logprint(f"[main.py] [INFO] \"{kitsu_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
+			logprint(f"[main.py] [INFO] \"{found_title}\" with ID {anidb_id} doesn't require fingerprinting. Skipping")
 			continue
 
 		jp_title = None
@@ -386,12 +392,12 @@ def main():
 
 		themes = animethemesmoe.download_themes(jp_title, anidb_id, kitsu_id, themes_to_download)
 
-		if len(themes) == 0 and jp_title != kitsu_title:
+		if len(themes) == 0 and jp_title != found_title:
 			logprint(f"[main.py] [WARNING] No themes found for \"{jp_title}\". Trying alternate query")
-			themes = animethemesmoe.download_themes(kitsu_title, anidb_id, kitsu_id, themes_to_download)
+			themes = animethemesmoe.download_themes(found_title, anidb_id, kitsu_id, themes_to_download)
 
 		if len(themes) == 0:
-			logprint(f"[main.py] [WARNING] No themes to get from \"{kitsu_title}\". Skipping")
+			logprint(f"[main.py] [WARNING] No themes to get from \"{found_title}\". Skipping")
 			continue
 
 		openings = [t for t in themes if "OP" in t['type']]
@@ -482,7 +488,7 @@ def main():
 				})
 			
 			if len(new_episode_list) == 0:
-				logprint(f"[main.py] [INFO] Episode batch {episode_index} for \"{kitsu_title}\" does not need to be fingerprinted")
+				logprint(f"[main.py] [INFO] Episode batch {episode_index} for \"{found_title}\" does not need to be fingerprinted")
 				episode_index = next_index
 				if not next_index:
 					for f in glob("./openings/*"):
@@ -491,7 +497,7 @@ def main():
 						os.remove(f)
 				continue
 
-			logprint(f"[main.py] [INFO] Starting fingerprinting for \"{kitsu_title}\"")
+			logprint(f"[main.py] [INFO] Starting fingerprinting for \"{found_title}\"")
 
 			fingerprint.fingerprint_episodes(anidb_id, new_episode_list)
 
