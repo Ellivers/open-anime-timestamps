@@ -179,7 +179,7 @@ Each value is an array of objects containing the source of the timestamp, episod
 ## This projects takes data from multiple sources
 | URL                                                      | Use                                               |
 |----------------------------------------------------------|---------------------------------------------------|
-| https://github.com/c032/anidb-animetitles-archive        | Anime title list dumps                            |
+| https://github.com/NOBLES5E/anidb-titles                 | Anime title list dumps                            |
 | https://github.com/manami-project/anime-offline-database | AniDB IDs to MAL/Kitsu IDs                        |
 | https://animethemes.moe                                  | Anime opening/ending themes                       |
 | https://animepahe.ru                                     | Anime episodes                                    |
