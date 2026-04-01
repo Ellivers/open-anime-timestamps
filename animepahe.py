@@ -11,7 +11,7 @@ import math
 from lxml import etree, cssselect
 from utils import is_not_silent, logprint, get_media_duration
 
-URL_BASE = "https://animepahe.si"
+URL_BASE = "https://animepahe.com"
 URL_API_BASE = URL_BASE + "/api?m="
 
 MAX_RETRY_COUNT = args.parsed_args.scrape_max_retry or 10
@@ -172,18 +172,18 @@ def decrypt_post_form(full_key: str, key: str, v1: int, v2: int) -> str:
 
 def get_play_page_html(url: str):
   retries = 0
-  try:
-    response = requests.get(url,cookies=COOKIES)
-  except Exception:
+  while retries < MAX_RETRY_COUNT:
     retries += 1
-    if retries > MAX_RETRY_COUNT:
-      return None
-    # If killed, wait a second
-    logprint(f"[animepahe.py] [WARNING] Error while requesting player page. Trying again in one second ({retries}/{MAX_RETRY_COUNT} retries)")
-    time.sleep(1)
-    return get_play_page_html(url)
-  
-  return etree.HTML(response.text)
+    try:
+      response = requests.get(url,cookies=COOKIES)
+    except Exception:
+      # If killed, wait a second
+      logprint(f"[animepahe.py] [WARNING] Error while requesting player page. Trying again in one second ({retries}/{MAX_RETRY_COUNT} retries)")
+      time.sleep(1)
+      continue
+    return etree.HTML(response.text)
+
+  return None
 
 def get_episode_download(anime_session: str, episode_session: str) -> str:
   play_page_url = URL_BASE + f'/play/{anime_session}/{episode_session}'
