@@ -304,6 +304,7 @@ def main():
 	for anime in anime_titles[start_index:]:
 		anidb_id = str(anime["id"])
 		kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
+		mal_id = None
 
 		if kitsu_id:
 			kitsu_details = kitsu.details(kitsu_id)
@@ -319,6 +320,7 @@ def main():
 
 			mal_info = myanimelist.get_anime_info(mal_id)
 			found_title = mal_info['title']
+			episode_count = mal_info['num_episodes']
 
 
 		pahe_session = animepahe.get_anime_session(found_title, anidb_id)
@@ -390,11 +392,17 @@ def main():
 		else:
 			jp_title = titles[0]
 
-		themes = animethemesmoe.download_themes(jp_title, anidb_id, kitsu_id, themes_to_download)
+		match_id = {}
+		if kitsu_id:
+			match_id['kitsu'] = kitsu_id
+		if mal_id:
+			match_id['mal'] = mal_id
+
+		themes = animethemesmoe.download_themes(jp_title, anidb_id, match_id, themes_to_download)
 
 		if len(themes) == 0 and jp_title != found_title:
 			logprint(f"[main.py] [WARNING] No themes found for \"{jp_title}\". Trying alternate query")
-			themes = animethemesmoe.download_themes(found_title, anidb_id, kitsu_id, themes_to_download)
+			themes = animethemesmoe.download_themes(found_title, anidb_id, match_id, themes_to_download)
 
 		if len(themes) == 0:
 			logprint(f"[main.py] [WARNING] No themes to get from \"{found_title}\". Skipping")

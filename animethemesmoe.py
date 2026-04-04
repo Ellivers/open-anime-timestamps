@@ -11,8 +11,8 @@ from tqdm import tqdm
 
 from utils import is_not_silent, logprint, get_media_duration
 
-def download_themes(name: str, anidb_id: int|str, kitsu_id: int|str, to_download: list[str]) -> list[dict]:
-	themes = get_themes(name, anidb_id, kitsu_id)
+def download_themes(name: str, anidb_id: int|str, match_id: dict, to_download: list[str]) -> list[dict]:
+	themes = get_themes(name, anidb_id, match_id)
 	themes_list = []
 
 	fingerprinted_themes = get_fingerprinted_songs()
@@ -121,7 +121,7 @@ def get_results(name: str):
 
 	return response
 
-def get_themes(name: str, anidb_id: str|int, kitsu_id: int|str) -> list[dict]:
+def get_themes(name: str, anidb_id: str|int, match_id: dict) -> list[dict]:
 	response = get_results(name)
 
 	if response.headers["Content-Type"] != "application/json":
@@ -138,7 +138,10 @@ def get_themes(name: str, anidb_id: str|int, kitsu_id: int|str) -> list[dict]:
 		if len(external_anidb_id) == 0 or external_anidb_id[0] != int(anidb_id):
 			continue
 		external_kitsu_id = [resource['external_id'] for resource in anime['resources'] if resource['site'] == 'Kitsu']
-		if len(external_kitsu_id) == 0 or external_kitsu_id[0] != int(kitsu_id):
+		if 'kitsu' in match_id and (len(external_kitsu_id) == 0 or external_kitsu_id[0] != int(match_id['kitsu'])):
+			continue
+		external_mal_id = [resource['external_id'] for resource in anime['resources'] if resource['site'] == 'MyAnimeList']
+		if 'mal' in match_id and (len(external_mal_id) == 0 or external_mal_id[0] != int(match_id['mal'])):
 			continue
 		for t in anime['animethemes']:
 			if len(t["animethemeentries"]) and len(t["animethemeentries"][0]['videos']):
