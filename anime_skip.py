@@ -118,4 +118,14 @@ def parse_timestamps(timestamps: list, episode_number: float) -> dict:
 		else:
 			ongoing_type = None
 
+	if timestamp_data["recap"]["start"] > timestamp["recap"]["end"]:
+		logprint(f"[anime_skip.py] [WARNING] Invalid recap timestamp for episode {episode_number} ({timestamp_data['recap']}). Skipping timestamp")
+		timestamp_data["recap"] = {"start":-1,"end":-1}
+	if timestamp_data["opening"]["start"] > timestamp["opening"]["end"]:
+		logprint(f"[anime_skip.py] [WARNING] Invalid opening timestamp for episode {episode_number} ({timestamp_data['opening']}). Skipping timestamp")
+		timestamp_data["opening"] = {"start":-1,"end":-1}
+	if timestamp_data["ending"]["start"] > timestamp["ending"]["end"]:
+		logprint(f"[anime_skip.py] [WARNING] Invalid ending timestamp for episode {episode_number} ({timestamp_data['ending']}). Skipping timestamp")
+		timestamp_data["ending"] = {"start":-1,"end":-1}
+
 	return timestamp_data
