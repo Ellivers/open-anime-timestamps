@@ -178,12 +178,15 @@ def main():
 				episode_count = 9999
 
 			# Anime-skip
-			as_episodes = anime_skip.find_episodes(str(anilist_id))
+			if anilist_id:
+				as_episodes = anime_skip.find_episodes(str(anilist_id))
+			else:
+				as_episodes = None
 
 			if as_episodes:
 				actual_series = series
 				logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
-				
+
 				for episode in as_episodes:
 					if not episode["number"]:
 							continue
