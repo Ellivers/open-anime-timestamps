@@ -63,7 +63,7 @@ def main():
 			series = local_database[key]
 			for ep in value:
 				episode_number = ep.get('episode_number')
-				if not episode_number:
+				if episode_number is None:
 					continue
 				if episode_number < 0:
 					logprint(f"[main.py] [WARNING] Skipping episode with invalid number {episode_number}")
