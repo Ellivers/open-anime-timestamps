@@ -140,6 +140,7 @@ cython_debug/
 # Custom
 anime-titles.*
 anime-offline-database*
+aniskip-database*
 config.json
 episodes
 openings

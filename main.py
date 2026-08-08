@@ -136,10 +136,16 @@ def main():
 
 	# Pull timestamps from other databases first
 	if not args.parsed_args.skip_aggregation:
+
 		start_index = 0
 		start_arg = args.parsed_args.aggregation_start
 
-		if start_arg != None:
+		if not start_arg:
+			aniskip.process()
+			local_database_file = open("timestamps.json", "r")
+			local_database: dict = json.load(local_database_file)
+			local_database_file.close()
+		else:
 			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) >= start_arg), 0)
 			start_id = anime_titles[start_index]['id']
 		
@@ -151,7 +157,6 @@ def main():
 			anidb_id = str(anime["id"])
 			anilist_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "anilist")
 			mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
-			kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 
 			if anidb_id not in local_database:
 				local_database[anidb_id] = []
@@ -166,6 +171,7 @@ def main():
 			if anime_info and anime_info['num_episodes']:
 				episode_count = anime_info['num_episodes']
 			else:
+				kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 				kitsu_details = kitsu.details(kitsu_id)
 				if 'data' in kitsu_details:
 					keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
@@ -178,10 +184,9 @@ def main():
 				episode_count = 9999
 
 			# Anime-skip
+			anime_skip_episodes = None
 			if anilist_id:
 				anime_skip_episodes = anime_skip.find_episodes(str(anilist_id))
-			else:
-				anime_skip_episodes = None
 
 			if anime_skip_episodes:
 				actual_series = series
@@ -227,51 +232,6 @@ def main():
 						actual_series.append(timestamp_data)
 					
 				local_database_file = open("timestamps.json", 'w')
-				json.dump(local_database, local_database_file, indent=4)
-				local_database_file.close()
-
-			# AniSkip
-			# Requires a list of episodes
-			episodes = []
-			if kitsu_id:
-				episodes = kitsu.episodes(kitsu_id)
-			elif episode_count and episode_count != 9999:
-				for i in range(episode_count):
-					episodes.append(i)
-
-			for episode in episodes:
-				if not mal_id:
-					break
-
-				episode_duration = 0
-				if kitsu_id:
-					episode_number = float(episode['attributes']['number'])
-					episode_duration = episode['attributes']['length']
-					if episode_duration:
-						episode_duration = episode_duration * 60
-					else:
-						episode_duration = anime_info['average_episode_duration'] or 0
-						
-				else:
-					episode_number = float(episode)
-				found_skips = aniskip.find_skips(mal_id, episode_number)
-				if not found_skips:
-					continue
-				logprint(f"[main.py] [INFO] Found aniskip timestamps for episode {episode_number} series ID {anidb_id}")
-
-				timestamp_data = aniskip.parse_timestamps(found_skips, episode_number, episode_duration)
-
-				if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1:
-					continue
-
-				existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == float(episode_number)]
-				if len(existing_indices) > 0:
-					series[existing_indices[0]] = merge_timestamps(timestamp_data, series[existing_indices[0]])
-				else:
-					series.append(timestamp_data)
-
-			if len(episodes):
-				local_database_file = open("timestamps.json",'w')
 				json.dump(local_database, local_database_file, indent=4)
 				local_database_file.close()
 
@@ -384,7 +344,7 @@ def main():
 			continue
 		
 		local_database_file = open("timestamps.json", "r")
-		local_database = json.load(local_database_file)
+		local_database: dict = json.load(local_database_file)
 		local_database_file.close()
 
 		if anidb_id not in local_database:

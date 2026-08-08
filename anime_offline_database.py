@@ -9,6 +9,8 @@ from utils import logprint
 URL = "https://github.com/manami-project/anime-offline-database/releases/download/latest/anime-offline-database-minified.json"
 PATH = "./anime-offline-database-processed.json"
 
+local_database = None
+
 def update_id_database():
 	if not can_download():
 		logprint("[anime_offline_database.py] [INFO] Using cached anime-offline-database-processed.json")
@@ -70,12 +72,13 @@ def can_download() -> bool:
 		return True
 
 def convert_anime_id(anime_id: str|int, id_from: str, id_to: str) -> int:
-	local_database_file = open(PATH, "r")
-	local_database = json.load(local_database_file)
+	global local_database
+
+	if not local_database:
+		local_database_file = open(PATH, "r")
+		local_database = json.load(local_database_file)
+		local_database_file.close()
 
 	for entry in local_database:
 		if entry[id_from] == int(anime_id):
-			local_database_file.close()
 			return entry[id_to]
-
-	local_database_file.close()
