@@ -186,6 +186,7 @@ Each value is an array of objects containing the source of the timestamp, episod
 | https://github.com/worldveil/dejavu ([used fork](https://github.com/JPery/dejavu))                     | Acoustic fingerprinting                           |
 | https://www.anime-skip.com                               | Other timestamp DB                                |
 | https://tuckerchap.in/BetterVRV                          | Other timestamp DB                                |
+| https://github.com/aniskip/aniskip-api                   | Other timestamp DB                                |
 | https://github.com/montylion                             | Running this tool to build most of the timestamps |
 | https://github.com/SenZmaKi/Senpwai                      | Methods for scraping AnimePahe                    |
 

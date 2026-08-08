@@ -6,6 +6,7 @@ from pydub import AudioSegment
 import args
 import re
 import anime_skip
+import aniskip
 import anidb
 import anime_offline_database
 import bettervrv
@@ -142,7 +143,7 @@ def main():
 			start_index = next((i for i, anime in enumerate(anime_titles) if int(anime["id"]) >= start_arg), 0)
 			start_id = anime_titles[start_index]['id']
 		
-		logprint(f"[main.py] [INFO] Finding timestamps from anime-skip and bettervrv")
+		logprint(f"[main.py] [INFO] Finding timestamps from anime-skip, aniskip, and bettervrv")
 		if start_arg != None and start_arg != start_id:
 			logprint(f"[main.py] [INFO] No ID {start_arg} found. Starting from ID {start_id} instead.")
 
@@ -150,22 +151,21 @@ def main():
 			anidb_id = str(anime["id"])
 			anilist_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "anilist")
 			mal_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "myanimelist")
+			kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 
 			if anidb_id not in local_database:
 				local_database[anidb_id] = []
 
 			series = local_database[anidb_id]
 
+			anime_info = None
 			if mal_id:
 				anime_info = myanimelist.get_anime_info(mal_id)
-			else:
-				anime_info = None
 
 			episode_count = None
 			if anime_info and anime_info['num_episodes']:
 				episode_count = anime_info['num_episodes']
 			else:
-				kitsu_id = anime_offline_database.convert_anime_id(anidb_id, "anidb", "kitsu")
 				kitsu_details = kitsu.details(kitsu_id)
 				if 'data' in kitsu_details:
 					keys_exist = all(a in kitsu_details['data']['attributes'] for a in ['totalLength','episodeLength'])
@@ -179,15 +179,15 @@ def main():
 
 			# Anime-skip
 			if anilist_id:
-				as_episodes = anime_skip.find_episodes(str(anilist_id))
+				anime_skip_episodes = anime_skip.find_episodes(str(anilist_id))
 			else:
-				as_episodes = None
+				anime_skip_episodes = None
 
-			if as_episodes:
+			if anime_skip_episodes:
 				actual_series = series
 				logprint(f"[main.py] [INFO] Found anime-skip timestamps for series with ID {anidb_id}")
 
-				for episode in as_episodes:
+				for episode in anime_skip_episodes:
 					if not episode["number"]:
 							continue
 					if len(episode['timestamps']) == 0:
@@ -229,7 +229,52 @@ def main():
 				local_database_file = open("timestamps.json", 'w')
 				json.dump(local_database, local_database_file, indent=4)
 				local_database_file.close()
-			
+
+			# AniSkip
+			# Requires a list of episodes
+			episodes = []
+			if kitsu_id:
+				episodes = kitsu.episodes(kitsu_id)
+			elif episode_count and episode_count != 9999:
+				for i in range(episode_count):
+					episodes.append(i)
+
+			for episode in episodes:
+				if not mal_id:
+					break
+
+				episode_duration = 0
+				if kitsu_id:
+					episode_number = float(episode['attributes']['number'])
+					episode_duration = episode['attributes']['length']
+					if episode_duration:
+						episode_duration = episode_duration * 60
+					else:
+						episode_duration = anime_info['average_episode_duration'] or 0
+						
+				else:
+					episode_number = float(episode)
+				found_skips = aniskip.find_skips(mal_id, episode_number)
+				if not found_skips:
+					continue
+				logprint(f"[main.py] [INFO] Found aniskip timestamps for episode {episode_number} series ID {anidb_id}")
+
+				timestamp_data = aniskip.parse_timestamps(found_skips, episode_number, episode_duration)
+
+				if timestamp_data["recap"]["start"] == -1 and timestamp_data["opening"]["start"] == -1 and timestamp_data["ending"]["start"] == -1:
+					continue
+
+				existing_indices = [i for i in range(len(series)) if series[i]["episode_number"] == float(episode_number)]
+				if len(existing_indices) > 0:
+					series[existing_indices[0]] = merge_timestamps(timestamp_data, series[existing_indices[0]])
+				else:
+					series.append(timestamp_data)
+
+			if len(episodes):
+				local_database_file = open("timestamps.json",'w')
+				json.dump(local_database, local_database_file, indent=4)
+				local_database_file.close()
+
 			# BetterVRV
 
 			# OK to use 'continue' here because no more sources are after BetterVRV
