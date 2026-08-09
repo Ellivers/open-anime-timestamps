@@ -25,7 +25,8 @@ def process():
 	lines = file.readlines()
 
 	skips = []
-	couldnt_convert = []
+	couldnt_convert = 0
+	id_convert_cache = {}
 
 	if is_not_silent():
 		progress_bar = tqdm(range(1, len(lines)))
@@ -36,10 +37,13 @@ def process():
 	for i in progress_bar:
 		line = lines[i].split(',')
 		mal_id = line[0]
-		anidb_id = anime_offline_database.convert_anime_id(mal_id, "myanimelist", "anidb")
+		cached_id = id_convert_cache.get(mal_id)
+		anidb_id = cached_id or anime_offline_database.convert_anime_id(mal_id, "myanimelist", "anidb")
 		if not anidb_id:
-			couldnt_convert.append(mal_id)
+			couldnt_convert = couldnt_convert + 1
 			continue
+		if not cached_id:
+			id_convert_cache[mal_id] = anidb_id
 		skip_obj = {
 			"anidb_id": anidb_id,
 			"episode": float(line[1]),
@@ -68,8 +72,8 @@ def process():
 			continue
 		skips.append(skip_obj)
 
-	for mal_id in couldnt_convert:
-		logprint(f"[aniskip.py] [WARNING] Couldn't convert MAL ID {mal_id}")
+	if couldnt_convert > 0:
+		logprint(f"[aniskip.py] [WARNING] Couldn't convert {couldnt_convert} MAL IDs")
 
 	local_database_file = open("timestamps.json", "r")
 	local_database: dict = json.load(local_database_file)
@@ -78,7 +82,7 @@ def process():
 	logprint("[aniskip.py] [INFO] Adding aniskip timestamps to database")
 
 	for skip in skips:
-		anidb_id = skip['anidb_id']
+		anidb_id = str(skip['anidb_id'])
 		if anidb_id not in local_database:
 			local_database[anidb_id] = []
 		series = local_database[anidb_id]
